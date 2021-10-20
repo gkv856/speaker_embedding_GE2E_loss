@@ -5,11 +5,9 @@ import os
 import random
 
 
-
 class AutoVCNetDataset(data.Dataset):
 
     def __init__(self, hp):
-
         self.hp = hp
 
         # reading pickle file with speaker mel-spec files and embeddings
@@ -27,7 +25,6 @@ class AutoVCNetDataset(data.Dataset):
         return self.spr_len
 
     def __getitem__(self, idx):
-
         selected_spr = self.lst_spr_embs[idx]
 
         spr_utter_path = selected_spr[0]
@@ -51,13 +48,12 @@ class AutoVCNetDataset(data.Dataset):
         return utter_used, spr_emb, spr_utter_path
 
 
-def get_data_loader(hp, batch_size=1):
+def get_auto_vc_data_loader(hp, batch_size=1):
     train_dataset = AutoVCNetDataset(hp)
     train_loader = data.DataLoader(train_dataset,
-                          batch_size=batch_size,  # number of speakers
-                          shuffle=True,
-                          num_workers=hp.training_num_workers,
-                          drop_last=True)
+                                   batch_size=batch_size,  # number of speakers
+                                   shuffle=True,
+                                   drop_last=True)
     return train_loader
 
 
@@ -66,8 +62,7 @@ def get_data_loader(hp, batch_size=1):
 if __name__ == '__main__':
     from strings.constants import hp
 
-    train_loader = get_data_loader(hp)
+    train_loader = get_auto_vc_data_loader(hp)
 
     for i, res in enumerate(train_loader):
-        print(i, res[0].shape, res[1].shape)
-
+        print(i, res[0].shape, res[1].shape, res[2])

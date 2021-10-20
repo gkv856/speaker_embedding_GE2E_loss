@@ -95,32 +95,48 @@ hparam_dict = {
             "speaker_embs_metadata_file": "speaker_embs_metadata.pkl",
             "speaker_embs_metadata_path": "static/pickle_files"
         },
+
         "s2": {
             "mul_32_utter_len": 128,
-
         },
 
+        # encoder model parameters
+        "m_enc": {
+            "dim_neck": 32,
+            "freq": 32,
+            "out_dims": 512,
+            "lstm_enc_stack": 2,
+        },
 
+        # decoder model parameters
+        "m_dec": {
+            "out_dims": 512,
+            "lstm_dec_stack": 1,
+            "out_dim_lstm": 1024,
+            "lstm_out_stack": 3,
+        },
 
-        "model_hidden_size": 256,
-        "model_embedding_size": 256,
-        "model_num_layers": 3,
+        # postnet model parameters
+        "m_pn": {
+            "out_dims": 512,
+        },
 
-        # setting the hyper parameters
-        "lr": 0.05,
-        "training_epochs": 1000,
-        "model_path": "static/model_chk_pts/ge2e/ckpt_epoch_5000.pth",
-        "checkpoint_dir": "static/model_chk_pts/ge2e",
-        "save_best_weights": True,
-        "min_test_loss": 2.0,
+        # AutoVC model training parameters
+        "tpm": {
+            "lambda_cd": 1,
+            "num_iters": 10000,
+            "log_step": 100,
+            "dot_print": 10,
+            "lr": 0.001,
+            "reduce_lr_interval": 300,
+            "checkpoint_dir": "static/model_chk_pts/autovc",
+            "data_batch_size": 1,
+            "checkpoint_interval": 200,
+            "best_model_path": "static/model_chk_pts/autovc/m_best_50_L_0.0001.pth",
+            "save_best_weights": True,
+            "min_test_loss": 2.0,
+        },
 
-
-        "restore_existing_model": False,
-        "checkpoint_interval": 200,
-        "training_N": 2,  # Number of  speaker aka batch_size for the data loader
-        "training_M": 16,  # Number of utterances per speaker
-        "test_N": 2,  # Number of  speaker aka batch_size for the data loader
-        "test_M": 16,  # Number of utterances per speaker
     },
 
 
