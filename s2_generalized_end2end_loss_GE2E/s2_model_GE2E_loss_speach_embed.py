@@ -1,7 +1,6 @@
 import torch.nn as nn
 import torch
-
-
+import os
 
 class ModelGE2ELossSpeachEmbed(nn.Module):
 
@@ -32,6 +31,24 @@ class ModelGE2ELossSpeachEmbed(nn.Module):
         # The embedding vector (d-vector) is defined as the L2 normalization of the network output
         x = x / torch.norm(x, dim=1).unsqueeze(1)
         return x
+
+
+def get_pre_trained_embedding_model(hp):
+    """
+    this method loads a pre-trained model and return the model in eval mode for inference/predictions
+    :param hp:
+    :return:
+    """
+    model = ModelGE2ELossSpeachEmbed(hp).to(hp.general.device)
+    model_path = os.path.join(hp.general.project_root, hp.m_ge2e.best_model_path)
+
+    # load weights as dictionary
+    weight_dict = torch.load(model_path, map_location=hp.general.device)
+    model.load_state_dict(weight_dict)
+    model = model.eval()
+    print(f"Pre-trained model loaded {model_path}")
+
+    return model
 
 
 # quick test, below code will not be executed when the file is imported

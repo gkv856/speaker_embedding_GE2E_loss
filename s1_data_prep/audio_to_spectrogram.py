@@ -71,16 +71,16 @@ def save_spectrogram_tisv(hp, speaker_utter_cnt=100):
             train_data = shuffled_utter_specs[:train_idx, :, :]
             test_data = shuffled_utter_specs[train_idx:, :, :]
 
-            print(f"\n'Training data' Size saved = {train_data.shape}\n")
+            print(f"'Training data' Size saved = {train_data.shape}")
             file_full_path = os.path.join(spec_path_train, f"sv_{folder}_{i + 1}.npy")
             np.save(file_full_path, train_data)
 
-            print(f"\n'Eval data' Size saved = {test_data.shape}\n")
+            print(f"'Eval data' Size saved = {test_data.shape}")
             file_full_path = os.path.join(spec_path_test, f"sv_{folder}_{i + 1}.npy")
             np.save(file_full_path, test_data)
 
         else:
-            print(f"\nSkipped for {folder} and Size was = {utterances_spec.shape}\n")
+            print(f"Skipped for {folder} and Size was = {utterances_spec.shape}\n")
 
     print("Spectrograms saved!!")
 
