@@ -39,7 +39,6 @@ hparam_dict = {
         "mel_window_length": 25,  # In milliseconds
         "mel_window_step": 10,  # In milliseconds
         "mel_n_channels": 80,
-
     },
 
     ## Audio
@@ -71,6 +70,16 @@ hparam_dict = {
         "model_embedding_size": 256,
         "model_num_layers": 3,
 
+        # setting the hyper parameters
+        "lr": 0.05,
+        "training_epochs": 1000,
+        "model_path": "static/model_chk_pts/ge2e/ckpt_epoch_5000.pth",
+        "restore_existing_model": False,
+        "checkpoint_interval": 200,
+        "training_N": 2,  # Number of  speaker aka batch_size for the data loader
+        "training_M": 16,  # Number of utterances per speaker
+        "test_N": 2,  # Number of  speaker aka batch_size for the data loader
+        "test_M": 16,  # Number of utterances per speaker
     },
 
 }
