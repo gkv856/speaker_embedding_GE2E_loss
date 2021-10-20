@@ -58,7 +58,7 @@ class TrainTestDataset(data.Dataset):
         return utterance
 
 
-def get_train_test_data_loader(hp, lst_train_data, lst_test_data):
+def get_train_test_data_loader(hp):
     """
         creates data loader for training and testing
     :param hp:
@@ -67,7 +67,10 @@ def get_train_test_data_loader(hp, lst_train_data, lst_test_data):
     :return:
     """
 
-    train_dataset = TrainTestDataset(hp=hp, training=True, data_path=lst_train_data)
+    train_specs_path = os.path.join(hp.general.project_root, hp.raw_audio.train_spectrogram_path)
+    test_specs_path = os.path.join(hp.general.project_root, hp.raw_audio.test_spectrogram_path)
+
+    train_dataset = TrainTestDataset(hp=hp, training=True, data_path=train_specs_path)
     train_loader = data.DataLoader(train_dataset,
                                    batch_size=hp.m_ge2e.training_N,  # number of speakers
                                    shuffle=True,
@@ -76,7 +79,7 @@ def get_train_test_data_loader(hp, lst_train_data, lst_test_data):
     # TODO implement num_workers
     # num_workers=hp.m_ge2e.training_num_workers,
 
-    test_dataset = TrainTestDataset(hp=hp, training=False, data_path=lst_test_data)
+    test_dataset = TrainTestDataset(hp=hp, training=False, data_path=test_specs_path)
     test_loader = data.DataLoader(test_dataset,
                                   batch_size=hp.m_ge2e.test_N,  # number of speakers
                                   shuffle=False,
@@ -91,10 +94,7 @@ if __name__ == '__main__':
     from strings.constants import hp
     import os
 
-    train_specs_path = os.path.join(hp.general.project_root, hp.raw_audio.train_spectrogram_path)
-    test_specs_path = os.path.join(hp.general.project_root, hp.raw_audio.test_spectrogram_path)
-
-    trian_dl, test_dl = get_train_test_data_loader(hp, train_specs_path, test_specs_path)
+    trian_dl, test_dl = get_train_test_data_loader(hp)
 
     # this will produce 16 items because there are 17 speakers in the training and last is dropped
     for i, mel_db_batch in enumerate(trian_dl):

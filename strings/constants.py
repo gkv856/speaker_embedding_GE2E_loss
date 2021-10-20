@@ -11,7 +11,7 @@ current_dir = Path(__file__)
 PROJECT_DIR = [p for p in current_dir.parents if p.parts[-1] == PROJECT_NAME][0]
 
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-print(f"Device type available {device}")
+print(f"Device type available = '{device}'")
 
 hparam_dict = {
 
@@ -74,6 +74,11 @@ hparam_dict = {
         "lr": 0.05,
         "training_epochs": 1000,
         "model_path": "static/model_chk_pts/ge2e/ckpt_epoch_5000.pth",
+        "checkpoint_dir": "static/model_chk_pts/ge2e",
+        "save_best_weights": True,
+        "min_test_loss": 2.0,
+
+
         "restore_existing_model": False,
         "checkpoint_interval": 200,
         "training_N": 2,  # Number of  speaker aka batch_size for the data loader

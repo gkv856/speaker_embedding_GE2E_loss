@@ -3,7 +3,6 @@ import torch
 
 
 
-
 class ModelGE2ELossSpeachEmbed(nn.Module):
 
     def __init__(self, hp):
@@ -48,7 +47,7 @@ if __name__ == '__main__':
     train_specs_path = os.path.join(hp.general.project_root, hp.raw_audio.train_spectrogram_path)
     test_specs_path = os.path.join(hp.general.project_root, hp.raw_audio.test_spectrogram_path)
 
-    train_dl, test_dl = get_train_test_data_loader(hp, train_specs_path, test_specs_path)
+    train_dl, test_dl = get_train_test_data_loader(hp)
 
     total_utterances = hp.m_ge2e.training_N * hp.m_ge2e.training_M
 

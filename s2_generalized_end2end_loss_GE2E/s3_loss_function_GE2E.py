@@ -10,6 +10,7 @@ class GE2ELoss(nn.Module):
         super(GE2ELoss, self).__init__()
 
         self.device = hp.general.device
+        self.hp = hp
 
         # these constants are described in the paper
         # https://arxiv.org/abs/1710.10467
@@ -19,14 +20,14 @@ class GE2ELoss(nn.Module):
     def forward(self, embeddings):
         # Clamps all elements in input into the range [ min, max ]
         # https://pytorch.org/docs/stable/generated/torch.clamp.html
-        torch.clamp(self.w, hp.general.small_err)
+        torch.clamp(self.w, self.hp.general.small_err)
         centroids = GE2ELoss.get_centroids(embeddings)
-        cos_similarity = GE2ELoss.get_cos_sim(embeddings, centroids)
+        cos_similarity = GE2ELoss.get_cos_sim(embeddings, centroids, self.hp)
 
         # this is eq (5) from the paper https://arxiv.org/abs/1710.10467
         sim_matrix = self.w * cos_similarity.to(self.device) + self.b
 
-        loss, _ = GE2ELoss.calc_loss(sim_matrix)
+        loss, _ = GE2ELoss.calc_loss(sim_matrix, self.hp)
         return loss
 
     # eq. (1)
@@ -39,7 +40,7 @@ class GE2ELoss(nn.Module):
 
     # calculates cos similarities of eq. (5)
     @staticmethod
-    def get_cos_sim(embeddings, centroids):
+    def get_cos_sim(embeddings, centroids, hp):
         # number of utterances per speaker
         num_utterances = embeddings.shape[1]
         utterance_centroids = GE2ELoss.get_utterance_centroids(embeddings)
@@ -112,7 +113,7 @@ class GE2ELoss(nn.Module):
         return centroids
 
     @staticmethod
-    def calc_loss(sim_matrix):
+    def calc_loss(sim_matrix, hp):
         same_idx = list(range(sim_matrix.size(0)))
 
         # eq. (6)
@@ -139,9 +140,9 @@ if __name__ == '__main__':
     lst = [[0, 1, 0], [0, 0, 1], [0, 1, 0], [0, 1, 0], [1, 0, 0], [1, 0, 0]]
     embeddings = torch.tensor(lst).to(torch.float).reshape(3, 2, 3)
     centroids = GE2ELoss.get_centroids(embeddings)
-    cos_sim = GE2ELoss.get_cos_sim(embeddings, centroids)
+    cos_sim = GE2ELoss.get_cos_sim(embeddings, centroids, hp)
     sim_matrix = w * cos_sim + b
-    loss, per_embedding_loss = GE2ELoss.calc_loss(sim_matrix)
+    loss, per_embedding_loss = GE2ELoss.calc_loss(sim_matrix, hp)
 
     print(loss)
     print(per_embedding_loss)
