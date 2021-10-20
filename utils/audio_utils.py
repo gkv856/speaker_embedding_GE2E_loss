@@ -10,7 +10,7 @@ from scipy.ndimage.morphology import binary_dilation
 int16_max = (2 ** 15) - 1
 
 
-def preprocess_wav(fpath_or_wav: Union[str, Path, np.ndarray], source_sr: Optional[int] = None):
+def preprocess_wav(fpath_or_wav: Union[str, Path, np.ndarray], hp, source_sr: Optional[int] = None):
     """
     Applies preprocessing operations to a waveform either on disk or in memory such that
     The waveform will be resampled to match the data hyperparameters.
@@ -30,31 +30,31 @@ def preprocess_wav(fpath_or_wav: Union[str, Path, np.ndarray], source_sr: Option
 
     # Resample the wav
     if source_sr is not None:
-        wav = librosa.resample(wav, source_sr, hp.sampling_rate)
+        wav = librosa.resample(wav, source_sr, hp.audio.sampling_rate)
 
     # Apply the preprocessing: normalize volume and shorten long silences
-    wav = normalize_volume(wav, hp.audio_norm_target_dBFS, increase_only=True)
-    wav = trim_long_silences(wav)
+    wav = normalize_volume(wav, hp.vad.audio_norm_target_dBFS, increase_only=True)
+    wav = trim_long_silences(wav, hp)
 
     return wav
 
 
-def wav_to_mel_spectrogram(wav):
+def wav_to_mel_spectrogram(wav, hp):
     """
     Derives a mel spectrogram ready to be used by the encoder from a preprocessed audio waveform.
     Note: this not a log-mel spectrogram.
     """
     frames = librosa.feature.melspectrogram(
         wav,
-        hp.sampling_rate,
-        n_fft=hp.n_fft,
-        hop_length=hp.hop_length,
-        n_mels=hp.mel_n_channels
+        hp.audio.sampling_rate,
+        n_fft=hp.audio.n_fft,
+        hop_length=hp.audio.hop_length,
+        n_mels=hp.mel_fb.mel_n_channels
     )
     return frames.astype(np.float32).T
 
 
-def trim_long_silences(wav):
+def trim_long_silences(wav, hp):
     """
     Ensures that segments without voice in the waveform remain no longer than a
     threshold determined by the VAD parameters in params.py.
@@ -63,7 +63,7 @@ def trim_long_silences(wav):
     :return: the same waveform with silences trimmed away (length <= original wav length)
     """
     # Compute the voice detection window size
-    samples_per_window = (hp.vad_window_length * hp.sampling_rate) // 1000
+    samples_per_window = (hp.vad.vad_window_length * hp.audio.sampling_rate) // 1000
 
     # Trim the end of the audio to have a multiple of the window size
     wav = wav[:len(wav) - (len(wav) % samples_per_window)]
@@ -76,7 +76,7 @@ def trim_long_silences(wav):
     vad = webrtcvad.Vad(mode=3)
     for window_start in range(0, len(wav), samples_per_window):
         window_end = window_start + samples_per_window
-        voice_flag = vad.is_speech(pcm_wave[window_start * 2:window_end * 2], sample_rate=hp.sampling_rate)
+        voice_flag = vad.is_speech(pcm_wave[window_start * 2:window_end * 2], sample_rate=hp.audio.sampling_rate)
         voice_flags.append(voice_flag)
 
     voice_flags = np.array(voice_flags)
@@ -88,11 +88,11 @@ def trim_long_silences(wav):
         ret[width:] = ret[width:] - ret[:-width]
         return ret[width - 1:] / width
 
-    audio_mask = moving_average(voice_flags, hp.vad_moving_average_width)
+    audio_mask = moving_average(voice_flags, hp.vad.vad_moving_average_width)
     audio_mask = np.round(audio_mask).astype(np.bool)
 
     # Dilate the voiced regions
-    audio_mask = binary_dilation(audio_mask, np.ones(hp.vad_max_silence_length + 1))
+    audio_mask = binary_dilation(audio_mask, np.ones(hp.vad.vad_max_silence_length + 1))
     audio_mask = np.repeat(audio_mask, samples_per_window)
 
     return wav[audio_mask == True]
@@ -109,7 +109,7 @@ def normalize_volume(wav, target_dBFS, increase_only=False, decrease_only=False)
     return wav * (10 ** (dBFS_change / 20))
 
 
-def compute_partial_slices(n_samples: int, rate, min_coverage):
+def compute_partial_slices(n_samples: int, hp):
     """
     Computes where to split an utterance waveform and its corresponding mel spectrogram to
     obtain partial utterances of <partials_n_frames> each. Both the waveform and the
@@ -133,22 +133,22 @@ def compute_partial_slices(n_samples: int, rate, min_coverage):
     respectively the waveform and the mel spectrogram with these slices to obtain the partial
     utterances.
     """
-    assert 0 < min_coverage <= 1
+    assert 0 < hp.vad.min_coverage <= 1
 
     # Compute how many frames separate two partial utterances
-    samples_per_frame = int((hp.sampling_rate * hp.mel_window_step / 1000))
+    samples_per_frame = int((hp.audio.sampling_rate * hp.mel_fb.mel_window_step / 1000))
     n_frames = int(np.ceil((n_samples + 1) / samples_per_frame))
-    frame_step = int(np.round((hp.sampling_rate / rate) / samples_per_frame))
+    frame_step = int(np.round((hp.audio.sampling_rate / hp.vad.rate_partial_slices) / samples_per_frame))
 
-    min_frame_step = (hp.sampling_rate / (samples_per_frame * hp.partials_n_frames))
+    min_frame_step = (hp.audio.sampling_rate / (samples_per_frame * hp.audio.partials_n_frames))
     assert 0 < frame_step, "The rate is too high"
-    assert frame_step <= hp.partials_n_frames, "The rate is too low, it should be %f at least" % min_frame_step
+    assert frame_step <= hp.audio.partials_n_frames, "The rate is too low, it should be %f at least" % min_frame_step
 
     # Compute the slices
     wav_slices, mel_slices = [], []
-    steps = max(1, n_frames - hp.partials_n_frames + frame_step + 1)
+    steps = max(1, n_frames - hp.audio.partials_n_frames + frame_step + 1)
     for i in range(0, steps, frame_step):
-        mel_range = np.array([i, i + hp.partials_n_frames])
+        mel_range = np.array([i, i + hp.audio.partials_n_frames])
         wav_range = mel_range * samples_per_frame
         mel_slices.append(slice(*mel_range))
         wav_slices.append(slice(*wav_range))
@@ -156,7 +156,7 @@ def compute_partial_slices(n_samples: int, rate, min_coverage):
     # Evaluate whether extra padding is warranted or not
     last_wav_range = wav_slices[-1]
     coverage = (n_samples - last_wav_range.start) / (last_wav_range.stop - last_wav_range.start)
-    if coverage < min_coverage and len(mel_slices) > 1:
+    if coverage < hp.vad.min_coverage and len(mel_slices) > 1:
         mel_slices = mel_slices[:-1]
         wav_slices = wav_slices[:-1]
 
@@ -164,5 +164,10 @@ def compute_partial_slices(n_samples: int, rate, min_coverage):
 
 
 def shuffle_along_axis(a, axis):
+    """
+    :param a: nd array e.g. [40, 180, 80]
+    :param axis: array axis. e.g. 0
+    :return: a shuffled np array along the given axis
+    """
     idx = np.random.rand(*a.shape).argsort(axis=axis)
     return np.take_along_axis(a, idx, axis=axis)
