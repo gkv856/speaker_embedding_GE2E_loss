@@ -26,7 +26,7 @@ def calculate_ERR(model, hp, N=4, M=16):
     for mel_db_batch in test_loader:
         # mel_db_batch is returned as 4x5x160x40 (batchxnum_speakerxutterlenxn_mel) and we will reshape it to 20x160x40
         new_shape = (total_utterances, mel_db_batch.size(2), mel_db_batch.size(3))
-        mel_db_batch = torch.reshape(mel_db_batch, new_shape)
+        mel_db_batch = torch.reshape(mel_db_batch, new_shape).to(hp.general.device)
 
         # pass mel_db_batch through the pre-trained model
         embeddings = model(mel_db_batch)
@@ -120,7 +120,7 @@ def plot_scatter(model, hp, N=4, M=16):
     for mel_db_batch in test_loader:
         # mel_db_batch is returned as 4x5x160x40 (batchxnum_speakerxutterlenxn_mel) and we will reshape it to 20x160x40
         new_shape = (total_utterances, mel_db_batch.size(2), mel_db_batch.size(3))
-        mel_db_batch = torch.reshape(mel_db_batch, new_shape)
+        mel_db_batch = torch.reshape(mel_db_batch, new_shape).to(hp.general.device)
 
         # pass mel_db_batch through the pre-trained model
         embeddings = model(mel_db_batch)
