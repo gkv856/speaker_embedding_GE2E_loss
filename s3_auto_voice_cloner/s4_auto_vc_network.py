@@ -5,7 +5,7 @@ import torch.nn.functional as F
 
 from s3_auto_voice_cloner.s2_auto_vc_dataloader import get_auto_vc_data_loader
 from s3_auto_voice_cloner.s3_auto_vc_models import EncoderModel, DecoderModel, Postnet
-
+import os
 
 class AutoVCNetwork(nn.Module):
     """
@@ -56,6 +56,21 @@ class AutoVCNetwork(nn.Module):
         # finally return all the outputs to calculate losses
         # (torch.Size([2, 128, 80]), torch.Size([2, 128, 80]), torch.Size([2, 256]))
         return mel_outputs, mel_outputs_postnet, torch.cat(codes, dim=-1)
+
+
+def get_pre_trained_auto_vc_network(hp):
+    # creating an instance of the AutoVC network
+    # sending the model to the GPU (if available)
+    auto_vc_net = AutoVCNetwork(hp).to(hp.general.device)
+    model_path = os.path.join(hp.general.project_root, hp.m_avc.gen.best_model_path)
+
+    # load weights as dictionary
+    weight_dict = torch.load(model_path, map_location=hp.general.device)
+    auto_vc_net.load_state_dict(weight_dict)
+    auto_vc_net = auto_vc_net.eval().to(hp.general.device)
+    print(f"Pre-trained model loaded from '{model_path}'")
+
+    return auto_vc_net
 
 
 # quick test, below code will not be executed when the file is imported

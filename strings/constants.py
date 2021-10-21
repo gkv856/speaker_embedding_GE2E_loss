@@ -2,7 +2,6 @@ from pathlib import Path
 
 import torch
 
-
 # project name
 from utils.dict_to_dot import GetDictWithDotNotation
 
@@ -79,7 +78,6 @@ hparam_dict = {
         "save_best_weights": True,
         "min_test_loss": 2.0,
 
-
         "restore_existing_model": False,
         "checkpoint_interval": 200,
         "training_N": 2,  # Number of  speaker aka batch_size for the data loader
@@ -90,11 +88,18 @@ hparam_dict = {
 
     ## Auto voice cloner model
     "m_avc": {
+        "gen": {
+            "best_model_path": "static/model_chk_pts/autovc/ckpt_epoch_800.pth",
+            "cross_mel_specs_path": "static/pickle_files",
+            "cross_mel_specs_file": "spkr_cross_mel_specs_file.pkl",
+
+        },
 
         "s1": {
             "num_uttrs": 10,
+            "speaker_embs_metadata_path": "static/pickle_files",
             "speaker_embs_metadata_file": "speaker_embs_metadata.pkl",
-            "speaker_embs_metadata_path": "static/pickle_files"
+
         },
 
         "s2": {
@@ -139,7 +144,6 @@ hparam_dict = {
         },
 
     },
-
 
 }
 
