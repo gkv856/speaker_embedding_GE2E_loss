@@ -4,7 +4,7 @@ import torch
 
 
 # project name
-from auto_vc.utils.dict_to_dot import GetDictWithDotNotation
+from utils.dict_to_dot import GetDictWithDotNotation
 
 PROJECT_NAME = "auto_vc"
 
