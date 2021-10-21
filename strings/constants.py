@@ -6,7 +6,7 @@ import torch
 # project name
 from utils.dict_to_dot import GetDictWithDotNotation
 
-PROJECT_NAME = "auto_vc"
+PROJECT_NAME = "AutoVoiceConversion"
 
 current_dir = Path(__file__)
 PROJECT_DIR = [p for p in current_dir.parents if p.parts[-1] == PROJECT_NAME][0]
