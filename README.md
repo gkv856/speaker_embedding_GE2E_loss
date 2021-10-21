@@ -1,10 +1,10 @@
 ## This is a WIP repo, final version will be released soon
 
-### This is an End-to-End implementation of 'AUTOVC: Zero-Shot Voice Style Transfer with Only Autoencoder Loss' paper including Generalized End-to-End Loss for Speaker Verification (GE2E loss) model
+### This repo is an End-to-End pytorch implementation of 
+- 'AUTOVC: Zero-Shot Voice Style Transfer with Only Autoencoder Loss' paper
+- 'Generalized End-to-End Loss for Speaker Verification' (GE2E loss) paper
+- **Note**: Data used here is very elementary, please prepare you own data to train the model
 
-This repository provides a PyTorch implementation of AUTOVC.
-
-AUTOVC is a many-to-many non-parallel voice conversion framework. 
 
 ### Modules included in this repo
 - Voice Embedding Model: model, data, training, and pre-trained model

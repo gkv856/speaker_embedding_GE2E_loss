@@ -20,7 +20,7 @@ for vc_cross_mel_spec in vc_cross_mel_specs:
     name = vc_cross_mel_spec[0]
     mel_specs = vc_cross_mel_spec[1]
     print(name)
-    waveform = convert_mel_specs_to_audio(wave_net_model, wave_net_hp, mel_specs=mel_specs)
+    waveform = convert_mel_specs_to_audio(wave_net_model, wave_net_hp, hp, mel_specs=mel_specs)
     sf.write(name + '.wav', waveform, 16000, 'PCM_24')
 
 print(7)

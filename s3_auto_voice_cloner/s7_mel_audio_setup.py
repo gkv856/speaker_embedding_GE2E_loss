@@ -39,7 +39,7 @@ def get_wave_net_model(hp, pre_trained=True):
     return wave_net_model, w_hp
 
 
-def convert_mel_specs_to_audio(wavenet_model, w_hp, mel_specs=None, tqdm=tqdm):
+def convert_mel_specs_to_audio(wavenet_model, w_hp, hp, mel_specs=None, tqdm=tqdm):
     """
     This method converts the mel-spectrogram to an audio wav format using wavenet model
     :param wavenet_model:
