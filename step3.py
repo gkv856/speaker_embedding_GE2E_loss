@@ -1,5 +1,5 @@
 """
-Step3 of Auto Voice Cloning is to test the embedding model
+Step3 of Auto Voice Cloning is to: test the embedding model
 """
 from s2_generalized_end2end_loss_GE2E.s5_eval_model import calculate_ERR, plot_scatter
 from strings.constants import hp

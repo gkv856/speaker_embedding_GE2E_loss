@@ -1,5 +1,8 @@
 """
-Step5 of Auto Voice Cloning is to train the AutoVCNetwork
+Step5 of Auto Voice Cloning is to: train the AutoVCNetwork
+AutoVCmodel reads the spectrogram of a speaker and uses same user's embedding/speaking style to reconstruct the
+same audio
+https://arxiv.org/abs/1905.05879
 """
 
 from s3_auto_voice_cloner.s5_auto_vc_train import TrainAutoVCNetwork

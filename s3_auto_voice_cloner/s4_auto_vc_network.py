@@ -7,6 +7,7 @@ from s3_auto_voice_cloner.s2_auto_vc_dataloader import get_auto_vc_data_loader
 from s3_auto_voice_cloner.s3_auto_vc_models import EncoderModel, DecoderModel, Postnet
 import os
 
+
 class AutoVCNetwork(nn.Module):
     """
         AutoVCNetwork combines all the three models/networks defined above. The training and loss will be run on this network

@@ -1,5 +1,5 @@
 """
-Step2 of Auto Voice Cloning is to pre-train an embedding model
+Step2 of Auto Voice Cloning is to: pre-train an embedding model
 using Generalized End2End embedding GE2E
 """
 

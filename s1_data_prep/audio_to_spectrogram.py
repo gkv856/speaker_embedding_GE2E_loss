@@ -28,7 +28,6 @@ def save_spectrogram_tisv(hp, speaker_utter_cnt=100):
     for i, folder in enumerate(lst_all_speaker_folders):
 
         # path of each speaker
-
         per_speaker_folder = os.path.join(audio_path, folder)
         per_speaker_wavs = os.listdir(per_speaker_folder)
 
@@ -46,6 +45,7 @@ def save_spectrogram_tisv(hp, speaker_utter_cnt=100):
                 # print(f"Breaking the loop, speaker utter count already achieved")
                 break
 
+            # open the individual audio file and load it as a np array
             wav = preprocess_wav(utter_wav_file_path, hp=hp)
 
             wav_slices, mel_slices = compute_partial_slices(len(wav), hp=hp)
@@ -55,8 +55,11 @@ def save_spectrogram_tisv(hp, speaker_utter_cnt=100):
 
             # Split the utterance into partials and forward them through the model
             mel = wav_to_mel_spectrogram(wav, hp)
+
+            # now the the audio->np array-> mel-spectrogram
             mels = np.array([mel[s] for s in mel_slices])
 
+            # collecting 1 speakers's utterance/mel->spectrogram into one nd array
             if not type(utterances_spec) == np.ndarray:
                 utterances_spec = mels
             else:
@@ -89,4 +92,5 @@ def save_spectrogram_tisv(hp, speaker_utter_cnt=100):
 # it runs only when this file is directly executed
 if __name__ == '__main__':
     from strings.constants import hp
+
     save_spectrogram_tisv(hp, 2)

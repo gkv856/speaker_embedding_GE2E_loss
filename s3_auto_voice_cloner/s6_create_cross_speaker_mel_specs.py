@@ -17,10 +17,10 @@ def create_mel_specs_per_speaker(hp):
     """
     # loading pickle files created
     p1 = os.path.join(hp.general.project_root, hp.m_avc.s1.speaker_embs_metadata_path)
-    pickle_path = os.path.join(p1, hp.m_avc.s1.speaker_embs_metadata_file)
+    speaker_embs_metadata_file = os.path.join(p1, hp.m_avc.s1.speaker_embs_metadata_file)
 
     # metadata contains npy file with each items having file path and speaker embeddings
-    metadata = pickle.load(open(pickle_path, "rb"))
+    metadata = pickle.load(open(speaker_embs_metadata_file, "rb"))
 
     # loading a pre-trained Auto Voice Clone model
     auto_vc_model = get_pre_trained_auto_vc_network(hp)
@@ -30,7 +30,7 @@ def create_mel_specs_per_speaker(hp):
 
     for spkr_i in metadata:
 
-        # speaker name depends on how the file name is structured therefore needs to be splitted accordingly
+        # speaker name depends on how the file name is structured therefore needs to split accordingly
         spkr_i_name = spkr_i[0].split("sv_")[-1].split(".")[0].split("_")[0]
 
         spkr_i_utter_path = spkr_i[0]

@@ -89,7 +89,7 @@ hparam_dict = {
     ## Auto voice cloner model
     "m_avc": {
         "gen": {
-            "best_model_path": "static/model_chk_pts/autovc/ckpt_epoch_800.pth",
+            "best_model_path": "static/model_chk_pts/autovc/autovc.ckpt",
             "cross_mel_specs_path": "static/pickle_files",
             "cross_mel_specs_file": "spkr_cross_mel_specs_file.pkl",
 

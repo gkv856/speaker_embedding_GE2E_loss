@@ -1,5 +1,5 @@
 """
-Step7 of Auto Voice Cloning is to create audio from cloned voice mel-spectrogram
+Step7 of Auto Voice Cloning is to: create audio from cloned voice mel-spectrogram using wavenet pre-trained model
 """
 from s3_auto_voice_cloner.s7_mel_audio_setup import get_wave_net_model, convert_mel_specs_to_audio
 from strings.constants import hp
