@@ -39,7 +39,7 @@ def calculate_ERR(model, hp, N=4, M=16):
         cos_sim = GE2ELoss.get_cos_sim(embeddings, centroids, hp)
         sim_matrix = w * cos_sim + b
 
-        S = sim_matrix.detach().numpy()
+        S = sim_matrix.detach().cpu().numpy()
         print(S.shape, type(S), "\n", S)
 
         # calculating EER
