@@ -77,5 +77,4 @@ def create_mel_specs_per_speaker(hp):
 # it runs only when this file is directly executed
 if __name__ == '__main__':
     from strings.constants import hp
-
     create_mel_specs_per_speaker(hp)

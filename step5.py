@@ -1,5 +1,5 @@
 """
-Step4 of Auto Voice Cloning is to create embeddings for each speaker and save as np files
+Step5 of Auto Voice Cloning is to train the AutoVCNetwork
 """
 
 from s3_auto_voice_cloner.s5_auto_vc_train import TrainAutoVCNetwork

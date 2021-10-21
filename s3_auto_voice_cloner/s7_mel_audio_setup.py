@@ -1,172 +1,66 @@
 from tqdm import tqdm
 from wavenet_vocoder import builder
-import soundfile as sf
 import torch
 from utils.dict_to_dot import GetDictWithDotNotation
-
-wave_net_hp = {
-    'name': "wavenet_vocoder",
-
-    # Convenient model builder
-    'builder': "wavenet",
-
-    # Input type:
-    # 1. raw [-1, 1]
-    # 2. mulaw [-1, 1]
-    # 3. mulaw-quantize [0, mu]
-    # If input_type is raw or mulaw, network assumes scalar input and
-    # discretized mixture of logistic distributions output, otherwise one-hot
-    # input and softmax output are assumed.
-    # **NOTE**: if you change the one of the two parameters below, you need to
-    # re-run preprocessing before training.
-    'input_type': "raw",
-    'quantize_channels': 65536,  # 65536 or 256
-
-    # Audio:
-    'sample_rate': 16000,
-    # this is only valid for mulaw is True
-    'silence_threshold': 2,
-    'num_mels': 80,
-    'fmin': 125,
-    'fmax': 7600,
-    'fft_size': 1024,
-    # shift can be specified by either hop_size or frame_shift_ms
-    'hop_size': 256,
-    'frame_shift_ms': None,
-    'min_level_db': -100,
-    'ref_level_db': 20,
-    # whether to rescale waveform or not.
-    # Let x is an input waveform, rescaled waveform y is given by:
-    # y = x / np.abs(x).max() * rescaling_max
-    'rescaling': True,
-    'rescaling_max': 0.999,
-    # mel-spectrogram is normalized to [0, 1] for each utterance and clipping may
-    # happen depends on min_level_db and ref_level_db, causing clipping noise.
-    # If False, assertion is added to ensure no clipping happens.o0
-    'allow_clipping_in_normalization': True,
-
-    # Mixture of logistic distributions:
-    'log_scale_min': float(-32.23619130191664),
-
-    # Model:
-    # This should equal to `quantize_channels` if mu-law quantize enabled
-    # otherwise num_mixture * 3 (pi, mean, log_scale)
-    'out_channels': 10 * 3,
-    'layers': 24,
-    'stacks': 4,
-    'residual_channels': 512,
-    'gate_channels': 512,  # split into 2 gropus internally for gated activation
-    'skip_out_channels': 256,
-    'dropout': 1 - 0.95,
-    'kernel_size': 3,
-    # If True, apply weight normalization as same as DeepVoice3
-    'weight_normalization': True,
-    # Use legacy code or not. Default is True since we already provided a model
-    # based on the legacy code that can generate high-quality audio.
-    # Ref: https://github.com/r9y9/wavenet_vocoder/pull/73
-    'legacy': True,
-
-    # Local conditioning (set negative value to disable))
-    'cin_channels': 80,
-    # If True, use transposed convolutions to upsample conditional features,
-    # otherwise repeat features to adjust time resolution
-    'upsample_conditional_features': True,
-    # should np.prod(upsample_scales) == hop_size
-    'upsample_scales': [4, 4, 4, 4],
-    # Freq axis kernel size for upsampling network
-    'freq_axis_kernel_size': 3,
-
-    # Global conditioning (set negative value to disable)
-    # currently limited for speaker embedding
-    # this should only be enabled for multi-speaker dataset
-    'gin_channels': -1,  # i.e., speaker embedding dim
-    'n_speakers': -1,
-
-    # Data loader
-    'pin_memory': True,
-    'num_workers': 2,
-
-    # train/test
-    # test size can be specified as portion or num samples
-    'test_size': 0.0441,  # 50 for CMU ARCTIC single speaker
-    'test_num_samples': None,
-    'random_state': 1234,
-
-    # Loss
-
-    # Training:
-    'batch_size': 2,
-    'adam_beta1': 0.9,
-    'adam_beta2': 0.999,
-    'adam_eps': 1e-8,
-    'amsgrad': False,
-    'initial_learning_rate': 1e-3,
-    # see lrschedule.py for available lr_schedule
-    'lr_schedule': "noam_learning_rate_decay",
-    'lr_schedule_kwargs': {},  # {"anneal_rate": 0.5, "anneal_interval": 50000},
-    'nepochs': 2000,
-    'weight_decay': 0.0,
-    'clip_thresh': -1,
-    # max time steps can either be specified as sec or steps
-    # if both are None, then full audio samples are used in a batch
-    'max_time_sec': None,
-    'max_time_steps': 8000,
-    # Hold moving averaged parameters and use them for evaluation
-    'exponential_moving_average': True,
-    # averaged = decay * averaged + (1 - decay) * x
-    'ema_decay': 0.9999,
-
-    # Save
-    # per-step intervals
-    'checkpoint_interval': 10000,
-    'train_eval_interval': 10000,
-    # per-epoch interval
-    'test_eval_epoch_interval': 5,
-    'save_optimizer_state': True,
-
-    # Eval:
-}
-
-hparams = GetDictWithDotNotation(wave_net_hp)
+import os
 
 
-def build_model():
-    model = getattr(builder, hparams.builder)(out_channels=hparams.out_channels,
-                                              layers=hparams.layers,
-                                              stacks=hparams.stacks,
-                                              residual_channels=hparams.residual_channels,
-                                              gate_channels=hparams.gate_channels,
-                                              skip_out_channels=hparams.skip_out_channels,
-                                              cin_channels=hparams.cin_channels,
-                                              gin_channels=hparams.gin_channels,
-                                              weight_normalization=hparams.weight_normalization,
-                                              n_speakers=hparams.n_speakers,
-                                              dropout=hparams.dropout,
-                                              kernel_size=hparams.kernel_size,
-                                              upsample_conditional_features=hparams.upsample_conditional_features,
-                                              upsample_scales=hparams.upsample_scales,
-                                              freq_axis_kernel_size=hparams.freq_axis_kernel_size,
-                                              scalar_input=True,
-                                              legacy=hparams.legacy,
-                                              )
-    return model
+def get_wave_net_model(hp, pre_trained=True):
+    # reading wavenet model's hyper parameters
+    wave_net_hp = hp.m_wave_net.hp
+    w_hp = GetDictWithDotNotation(wave_net_hp)
+
+    wave_net_model = getattr(builder, w_hp.builder)(out_channels=w_hp.out_channels,
+                                                    layers=w_hp.layers,
+                                                    stacks=w_hp.stacks,
+                                                    residual_channels=w_hp.residual_channels,
+                                                    gate_channels=w_hp.gate_channels,
+                                                    skip_out_channels=w_hp.skip_out_channels,
+                                                    cin_channels=w_hp.cin_channels,
+                                                    gin_channels=w_hp.gin_channels,
+                                                    weight_normalization=w_hp.weight_normalization,
+                                                    n_speakers=w_hp.n_speakers,
+                                                    dropout=w_hp.dropout,
+                                                    kernel_size=w_hp.kernel_size,
+                                                    upsample_conditional_features=w_hp.upsample_conditional_features,
+                                                    upsample_scales=w_hp.upsample_scales,
+                                                    freq_axis_kernel_size=w_hp.freq_axis_kernel_size,
+                                                    scalar_input=True,
+                                                    legacy=w_hp.legacy,
+                                                    )
+
+    if pre_trained:
+        m_path = os.path.join(hp.general.project_root, hp.m_wave_net.gen.best_model_path)
+        checkpoint = torch.load(m_path, map_location=hp.general.device)
+        wave_net_model.load_state_dict(checkpoint["state_dict"])
+
+        wave_net_model = wave_net_model.eval().to(hp.general.device)
+
+    return wave_net_model, w_hp
 
 
-def wavegen(wavenet_model, hp, c=None, tqdm=tqdm):
-    """Generate waveform samples by WaveNet.
-
+def convert_mel_specs_to_audio(wavenet_model, w_hp, mel_specs=None, tqdm=tqdm):
     """
+    This method converts the mel-spectrogram to an audio wav format using wavenet model
+    :param wavenet_model:
+    :param w_hp:
+    :param c:
+    :param tqdm:
+    :return:
+    """
+
 
     wavenet_model.eval()
     wavenet_model.make_generation_fast_()
 
-    Tc = c.shape[0]
-    upsample_factor = hparams.hop_size
+    Tc = mel_specs.shape[0]
+    upsample_factor = w_hp.hop_size
+
     # Overwrite length according to feature size
     length = Tc * upsample_factor
 
     # B x C x T
-    c = torch.FloatTensor(c.T).unsqueeze(0)
+    c = torch.FloatTensor(mel_specs.T).unsqueeze(0)
 
     initial_input = torch.zeros(1, 1, 1).fill_(0.0)
 
@@ -175,25 +69,41 @@ def wavegen(wavenet_model, hp, c=None, tqdm=tqdm):
     c = None if c is None else c.to(hp.general.device)
 
     with torch.no_grad():
-        y_hat = wavenet_model.incremental_forward(
-            initial_input, c=c, g=None, T=length, tqdm=tqdm, softmax=True, quantize=True,
-            log_scale_min=hparams.log_scale_min)
+        converted_wav = wavenet_model.incremental_forward(initial_input,
+                                                          c=c,
+                                                          g=None,
+                                                          T=length,
+                                                          tqdm=tqdm,
+                                                          softmax=True,
+                                                          quantize=True,
+                                                          log_scale_min=w_hp.log_scale_min)
 
-    y_hat = y_hat.view(-1).cpu().data.numpy()
+    converted_wav = converted_wav.view(-1).cpu().data.numpy()
 
-    return y_hat
-
-
-
+    return converted_wav
 
 
 # quick test, below code will not be executed when the file is imported
 # it runs only when this file is directly executed
 if __name__ == '__main__':
     from strings.constants import hp
+    import soundfile as sf
     import pickle
 
-    spect_vc = pickle.load(open('./results.pkl', 'rb'))
-    model = build_model().to(hp.device)
-    checkpoint = torch.load("../input/wave-net-model-ckk-pt/checkpoint_step001000000_ema.pth", map_location=hp.device)
-    model.load_state_dict(checkpoint["state_dict"])
+    # getting wavenet model, this will up sample the mel-spec to final audio
+    wave_net_model, wave_net_hp = get_wave_net_model(hp)
+
+    # reading the cross speaker mel-spectrograms
+    p1 = os.path.join(hp.general.project_root, hp.m_avc.gen.cross_mel_specs_path)
+    file_path = os.path.join(p1, hp.m_avc.gen.cross_mel_specs_file)
+    vc_cross_mel_specs = pickle.load(open(file_path, 'rb'))
+
+    # looping over each mel-spec and save it as an audio
+    for vc_cross_mel_spec in vc_cross_mel_specs:
+        name = vc_cross_mel_spec[0]
+        mel_specs = vc_cross_mel_spec[1]
+        print(name)
+        waveform = convert_mel_specs_to_audio(wave_net_model, wave_net_hp, mel_specs=mel_specs)
+        sf.write(name + '.wav', waveform, 16000, 'PCM_24')
+
+    print(1)
