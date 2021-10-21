@@ -4,7 +4,7 @@ import setuptools
 #   long_description = fh.read()
 
 setuptools.setup(
-    name="pyMACAPIs", # Replace with your own username
+    name="AutoVC", # Replace with your own username
     version="0.1.2",
     author="Gaurav K. Verma",
     author_email="gaurav.verma1@gds.ey.com",

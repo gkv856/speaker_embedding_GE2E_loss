@@ -1,5 +1,0 @@
-s1_data_prep
-s2_generalized_end2end_loss_GE2E
-s3_auto_voice_cloner
-strings
-utils
