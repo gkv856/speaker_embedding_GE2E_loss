@@ -1,0 +1,21 @@
+pip install Flask==1.1.2
+pip install Flask-RESTful==0.3.8
+pip install openpyxl==3.0.5
+pip install pandas==1.2.3
+
+
+
+dbfs:/FileStore/jars/0fa0dd25_95a6_4757_acf2_9f9258ec7cfd/pyMACAPIs-0.0.2-py3-none-any.whl
+
+
+
+pip install openpyxl==3.0.5
+pip install pandas==1.2.3
+
+py -m build
+
+openpyxl==3.0.5
+pandas==1.2.3
+
+
+python setup.py bdist_wheel
