@@ -1,5 +1,5 @@
 """
-Step4 of Auto Voice Cloning is to: create an embedding for each speaker and save as np files
+Step3 of Auto Voice Cloning is to: create an embedding for each speaker and save as np files
 """
 import torch
 

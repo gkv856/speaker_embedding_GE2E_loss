@@ -1,19 +1,17 @@
 """
-Step2 of Auto Voice Cloning is to: pre-train an embedding model
-using Generalized End2End embedding GE2E
+Step2 of Auto Voice Cloning is to: test the embedding model
 """
-
-from s2_generalized_end2end_loss_GE2E.s4_train_embed_model import TrainEmbedModel
+from s2_generalized_end2end_loss_GE2E.s5_eval_model import calculate_ERR, plot_scatter
 from strings.constants import hp
+from s2_generalized_end2end_loss_GE2E.s2_model_GE2E_loss_speach_embed import  get_pre_trained_embedding_model
 
+# loading a pre-trained model
+model = get_pre_trained_embedding_model(hp)
 
-hp.m_ge2e.training_epochs = 100
-hp.m_ge2e.checkpoint_interval = 10
-hp.m_ge2e.min_test_loss = 4
+# calculating ERR
+calculate_ERR(model, hp, 4, 8)
 
-# creating training object
-train_emb_model_obj = TrainEmbedModel(hp)
+# plotting speaker embeddings
+plot_scatter(model, hp, 4, 16)
 
-# training the model
-model, train_loss, test_loss = train_emb_model_obj.train_model(lr_reduce=20, epoch_print=10, dot_print=1)
-print(2)
+print(3)
