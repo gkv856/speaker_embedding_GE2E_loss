@@ -8,7 +8,7 @@ class ModelGE2ELossSpeachEmbed(nn.Module):
         super(ModelGE2ELossSpeachEmbed, self).__init__()
 
         # this creates a three stacks (hp.num_layer) of LSTM
-        self.LSTM_stack = nn.LSTM(hp.mel_fb.mel_n_channels,
+        self.LSTM_stack = nn.LSTM(hp.audio.mel_n_channels,
                                   hp.m_ge2e.model_hidden_size,
                                   num_layers=hp.m_ge2e.model_num_layers,
                                   batch_first=True)
@@ -61,9 +61,6 @@ if __name__ == '__main__':
     # testing the untrained model
     tmp_model = ModelGE2ELossSpeachEmbed(hp)
 
-    train_specs_path = os.path.join(hp.general.project_root, hp.raw_audio.train_spectrogram_path)
-    test_specs_path = os.path.join(hp.general.project_root, hp.raw_audio.test_spectrogram_path)
-
     train_dl, test_dl = get_train_test_data_loader(hp)
 
     total_utterances = hp.m_ge2e.training_N * hp.m_ge2e.training_M
@@ -76,4 +73,4 @@ if __name__ == '__main__':
         break
 
     assert res.shape[-1] == hp.m_ge2e.model_embedding_size
-    print(res.shape, res)
+    # print(res.shape, res)

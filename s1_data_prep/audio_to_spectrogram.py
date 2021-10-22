@@ -53,16 +53,18 @@ class CreateSpectrogram:
                 spkr_id = utter_wav_file.split(".")[0]
                 self.__save_mel_spects_as_train_test_split(mel_spects, folder, spkr_id)
 
-                # saving mel-spectrogram as train and test splits for AutoVC model
+                # saving mel-spectrogram as training data for AutoVC model
                 self.__save_mel_spects_as_train_test_split(mel_spects, folder, spkr_id, split=False)
 
         print("Spectrograms saved!!")
 
     def __save_mel_spects_as_train_test_split(self, mel_spects, folder, spkr_id, split=True):
         """
-        this function randomly splits the mel_spects and saves a random section of the spect as a test data
-        and keeps the remaining as train data
-        finally saves them as numpy files
+        this function randomly splits the mel_spects and saves a random section of the spect as a
+        train and test data for Embedding model
+        Also, when split is False then it saves the entire spect as Train data for AutoVC model
+
+        Finally saves them as numpy files
         :param mel_spects: mel spectrogram of shape AxB
         :param spec_path_train: path to save train data
         :param spec_path_test:  path to save test data

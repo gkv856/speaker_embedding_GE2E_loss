@@ -34,8 +34,6 @@ hparam_dict = {
     # same audio settings to be used in the wavenet model to reconstruct the audio from mel-spectrogram
     "audio": {
         "sampling_rate": 16000,
-        # Number of spectrogram frames in a partial utterance
-        "partials_n_frames": 180,  # 1600 ms
 
         "n_fft": 1024,  # 1024 seems to work well
         "hop_length": 1024 // 4,  # n_fft/4 seems to work better
@@ -70,6 +68,9 @@ hparam_dict = {
             "test_spects_path": "static/spectrograms/m_ge2e/test",
             "train_percent": .8,
             "min_test_utter_len": 128,
+
+            # Number of spectrogram frames in a partial utterance
+            "min_train_utter_len": 160,  # 1600 ms
         },
         "model_hidden_size": 256,
         "model_embedding_size": 256,
