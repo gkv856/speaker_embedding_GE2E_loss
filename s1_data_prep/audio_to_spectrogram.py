@@ -1,91 +1,138 @@
 import os
+import random
+
 import numpy as np
 
-from utils.audio_utils import preprocess_wav, compute_partial_slices, wav_to_mel_spectrogram, shuffle_along_axis
+from utils.audio_utils import wav_to_mel_spectrogram
 
 
-def save_spectrogram_tisv(hp, speaker_utter_cnt=100):
-    """ Full preprocess of text independent utterance. The log-mel-spectrogram is saved as numpy file.
-        Each partial utterance is split by voice detection using DB
-        and the first and the last 180 frames from each partial utterance are saved.
-        Need : utterance data set (VTCK)
-    """
-    print("Text independent speaker verification (TISV) utterance feature extraction started..")
+class CreateSpectrogram:
+    def __init__(self, hp, verbose=False):
+        self.hp = hp
+        self.verbose = verbose
 
-    # Create folder if does not exist, if exist then ignore
-    spec_path_train = os.path.join(hp.general.project_root, hp.raw_audio.train_spectrogram_path)
-    spec_path_test = os.path.join(hp.general.project_root, hp.raw_audio.test_spectrogram_path)
-    os.makedirs(spec_path_train, exist_ok=True)
-    os.makedirs(spec_path_test, exist_ok=True)
+    def save_spectrogram_tisv(self):
+        """
+        This method creates mel-spectrogram from the raw audio and then saves for Embedding model and AutoVC model
+        as train and test dataset.
+        Note: AutoVC model works on self construction therefore no separate test data is required
+        :param hp:
+        :return:
+        """
 
-    # list of folders (speakers) in the folder
-    audio_path = os.path.join(hp.general.project_root, hp.raw_audio.raw_audio_path)
-    lst_all_speaker_folders = os.listdir(audio_path)
-    total_speaker_num = len(lst_all_speaker_folders)
+        hp = self.hp
 
-    print(f"Total speakers to be saved {total_speaker_num}")
-    # looping through each speaker
-    for i, folder in enumerate(lst_all_speaker_folders):
+        # list of folders (speakers) in the folder
+        audio_path = os.path.join(hp.general.project_root, hp.raw_audio.raw_audio_path)
 
-        # path of each speaker
-        per_speaker_folder = os.path.join(audio_path, folder)
-        per_speaker_wavs = os.listdir(per_speaker_folder)
+        lst_all_speaker_folders = os.listdir(audio_path)
 
-        print(f"\nProcessing speaker no. {i + 1} with '{len(per_speaker_wavs)}'' audio files")
-        utterances_spec = []
+        if self.verbose:
+            print("Text independent speaker verification (TISV) utterance feature extraction started..")
+            print(f"Total speakers to be saved {len(lst_all_speaker_folders)}")
+        # looping through each speaker
+        for i, folder in enumerate(lst_all_speaker_folders):
 
-        # looping through all the folders for a given speaker
-        for utter_wav_file in per_speaker_wavs:
-            # path of each utterance
-            utter_wav_file_path = os.path.join(per_speaker_folder, utter_wav_file)
+            # path of each speaker
+            per_speaker_folder = os.path.join(audio_path, folder)
+            per_speaker_wavs = os.listdir(per_speaker_folder)
 
-            # if utter len already more than requested len, then no need to check other audio files
-            # meaning for a given speaker we already have 'speaker_utter_cnt' number of audio samples
-            if type(utterances_spec) == np.ndarray and utterances_spec.shape[0] >= speaker_utter_cnt:
-                # print(f"Breaking the loop, speaker utter count already achieved")
-                break
+            if self.verbose:
+                print(f"\nProcessing speaker no. {i + 1} with '{len(per_speaker_wavs)}'' audio files")
 
-            # open the individual audio file and load it as a np array
-            wav = preprocess_wav(utter_wav_file_path, hp=hp)
+            # looping through all the folders for a given speaker
+            for utter_wav_file in per_speaker_wavs:
+                # path of each utterance
+                utter_wav_file_path = os.path.join(per_speaker_folder, utter_wav_file)
 
-            wav_slices, mel_slices = compute_partial_slices(len(wav), hp=hp)
-            max_wave_length = wav_slices[-1].stop
-            if max_wave_length >= len(wav):
-                wav = np.pad(wav, (0, max_wave_length - len(wav)), "constant")
+                # open the individual audio file and load it as a np array
+                # Split the utterance into partials and forward them through the model
+                mel_spects = wav_to_mel_spectrogram(utter_wav_file_path, hp)
 
-            # Split the utterance into partials and forward them through the model
-            mel = wav_to_mel_spectrogram(wav, hp)
+                # saving mel-spectrogram as train and test splits for Embedding model
+                spkr_id = utter_wav_file.split(".")[0]
+                self.__save_mel_spects_as_train_test_split(mel_spects, folder, spkr_id)
 
-            # now the the audio->np array-> mel-spectrogram
-            mels = np.array([mel[s] for s in mel_slices])
+                # saving mel-spectrogram as train and test splits for AutoVC model
+                self.__save_mel_spects_as_train_test_split(mel_spects, folder, spkr_id, split=False)
 
-            # collecting 1 speakers's utterance/mel->spectrogram into one nd array
-            if not type(utterances_spec) == np.ndarray:
-                utterances_spec = mels
-            else:
-                utterances_spec = np.concatenate((utterances_spec, mels), axis=0)
+        print("Spectrograms saved!!")
 
-        # collecting all the utterances across all the wav files into np array
-        # Checking if speaker's utterance qualifies to be used. i.e. a min utterance length is available in the audio
-        if utterances_spec.shape[0] >= speaker_utter_cnt:
-            shuffled_utter_specs = shuffle_along_axis(utterances_spec, axis=0)
-            train_idx = int(speaker_utter_cnt * hp.raw_audio.train_percent)
+    def __save_mel_spects_as_train_test_split(self, mel_spects, folder, spkr_id, split=True):
+        """
+        this function randomly splits the mel_spects and saves a random section of the spect as a test data
+        and keeps the remaining as train data
+        finally saves them as numpy files
+        :param mel_spects: mel spectrogram of shape AxB
+        :param spec_path_train: path to save train data
+        :param spec_path_test:  path to save test data
+        :param folder: folder name
+        :param i: dataset count
+        :return:
+        """
+        hp = self.hp
+        if split:
 
-            train_data = shuffled_utter_specs[:train_idx, :, :]
-            test_data = shuffled_utter_specs[train_idx:, :, :]
+            # Create folder if does not exist, if exist then ignore
+            train_path = os.path.join(hp.general.project_root, hp.m_ge2e.tt_data.train_spects_path)
+            test_path = os.path.join(hp.general.project_root, hp.m_ge2e.tt_data.test_spects_path)
+            os.makedirs(train_path, exist_ok=True)
+            os.makedirs(test_path, exist_ok=True)
 
-            print(f"'Training data' Size saved = {train_data.shape}")
-            file_full_path = os.path.join(spec_path_train, f"sv_{folder}_{i + 1}.npy")
-            np.save(file_full_path, train_data)
+            utter_mel_len = mel_spects.shape[0]
+            test_percent = 1 - hp.m_ge2e.tt_data.train_percent
+            test_len = int(utter_mel_len * test_percent)
 
-            print(f"'Eval data' Size saved = {test_data.shape}")
-            file_full_path = os.path.join(spec_path_test, f"sv_{folder}_{i + 1}.npy")
-            np.save(file_full_path, test_data)
+            # ensuring min test size
+            if test_len < hp.m_ge2e.tt_data.min_test_utter_len:
+                test_len = hp.m_ge2e.tt_data.min_test_utter_len
+
+            # this will give us a random starting point from where we can clip the test audio
+            # we dont start from 0 therefore p1 can be designed as p1 = mel_spects[0: idx, :]
+            idx = random.randint(1, utter_mel_len - test_len - 1)
+            test_mel_spects = mel_spects[idx:idx + test_len, :]
+
+            # collecting train data
+            p1 = mel_spects[0: idx, :]
+            p2 = mel_spects[idx + test_len:, :]
+            train_mel_spects = np.concatenate((p1, p2), axis=0)
+
+            # creating train folders and ignoring if exist
+            train_dir_path = os.path.join(train_path, folder)
+            os.makedirs(train_dir_path, exist_ok=True)
+
+            # creating test folders and ignoring if exist
+            test_dir_path = os.path.join(test_path, folder)
+            os.makedirs(test_dir_path, exist_ok=True)
+
+            # now saving the numpy files
+            file_full_path = os.path.join(train_dir_path, f"sv_{spkr_id}.npy")
+            np.save(file_full_path, train_mel_spects)
+
+            if self.verbose:
+                print(f"'m_Embed: Training data' Size saved = {train_mel_spects.shape}")
+
+            file_full_path = os.path.join(test_dir_path, f"sv_{spkr_id}.npy")
+            np.save(file_full_path, test_mel_spects)
+
+            if self.verbose:
+                print(f"'m_Embed: Eval data' Size saved = {test_mel_spects.shape}")
 
         else:
-            print(f"Skipped for {folder} and Size was = {utterances_spec.shape}\n")
+            # AutoVC model calculates loss on self construction therefore no training data required
+            # Create folder if does not exist, if exist then ignore
+            train_path = os.path.join(hp.general.project_root, hp.m_avc.tt_data.train_spects_path)
+            os.makedirs(train_path, exist_ok=True)
 
-    print("Spectrograms saved!!")
+            # creating train folders and ignoring if exist
+            train_dir_path = os.path.join(train_path, folder)
+            os.makedirs(train_dir_path, exist_ok=True)
+
+            # now saving the numpy files
+            file_full_path = os.path.join(train_dir_path, f"sv_{spkr_id}.npy")
+            np.save(file_full_path, mel_spects)
+            if self.verbose:
+                print(f"'m_AVC: Training data' Size saved = {mel_spects.shape}")
 
 
 # quick test, below code will not be executed when the file is imported
@@ -93,4 +140,5 @@ def save_spectrogram_tisv(hp, speaker_utter_cnt=100):
 if __name__ == '__main__':
     from strings.constants import hp
 
-    save_spectrogram_tisv(hp, 2)
+    cr_obj = CreateSpectrogram(hp)
+    cr_obj.save_spectrogram_tisv()

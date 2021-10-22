@@ -9,7 +9,6 @@ PROJECT_NAME = "AutoVoiceConversion"
 
 current_dir = Path(__file__)
 PROJECT_DIR = [p for p in current_dir.parents if p.parts[-1] == PROJECT_NAME][0]
-
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 print(f"Device type available = '{device}'")
 
@@ -29,23 +28,22 @@ hparam_dict = {
     # path to the raw audio file
     "raw_audio": {
         "raw_audio_path": "static/raw_data/wavs",
-        "train_spectrogram_path": "static/spectrograms/train",
-        "test_spectrogram_path": "static/spectrograms/test",
-        "train_percent": .8,
-    },
-
-    ## Mel-filterbank
-    "mel_fb": {
-        "mel_window_length": 25,  # In milliseconds
-        "mel_window_step": 10,  # In milliseconds
-        "mel_n_channels": 80,
     },
 
     ## Audio
+    # same audio settings to be used in the wavenet model to reconstruct the audio from mel-spectrogram
     "audio": {
         "sampling_rate": 16000,
         # Number of spectrogram frames in a partial utterance
         "partials_n_frames": 180,  # 1600 ms
+
+        "n_fft": 1024,  # 1024 seems to work well
+        "hop_length": 1024 // 4,  # n_fft/4 seems to work better
+
+        "mel_window_length": 25,  # In milliseconds
+        "mel_window_step": 10,  # In milliseconds
+        "mel_n_channels": 80,
+
     },
 
     ## Voice Activation Detection
@@ -61,11 +59,18 @@ hparam_dict = {
 
         ## Audio volume normalization
         "audio_norm_target_dBFS": -30,
-
+        "rate_partial_slices": 1.3,
+        "min_coverage": 0.75,
     },
 
     ## Generalized end2end Model loss parameters
     "m_ge2e": {
+        "tt_data": {
+            "train_spects_path": "static/spectrograms/m_ge2e/train",
+            "test_spects_path": "static/spectrograms/m_ge2e/test",
+            "train_percent": .8,
+            "min_test_utter_len": 128,
+        },
         "model_hidden_size": 256,
         "model_embedding_size": 256,
         "model_num_layers": 3,
@@ -88,6 +93,10 @@ hparam_dict = {
 
     ## Auto voice cloner model
     "m_avc": {
+        "tt_data": {
+            "train_spects_path": "static/spectrograms/m_avc/train",
+            "test_spects_path": "static/spectrograms/m_avc/test",
+        },
         "gen": {
             "best_model_path": "static/model_chk_pts/autovc/autovc.ckpt",
             "cross_mel_specs_path": "static/pickle_files",
@@ -168,16 +177,18 @@ hparam_dict = {
             'input_type': "raw",
             'quantize_channels': 65536,  # 65536 or 256
 
-            # Audio:
-            'sample_rate': 16000,
+            # Audio: these 4 items to be same as used to create mel out of audio
+            # 'sample_rate': 16000,
+            # 'fft_size': 1024,
+            # # shift can be specified by either hop_size or frame_shift_ms
+            # 'hop_size': 256,
+            # 'num_mels': 80,
+
             # this is only valid for mulaw is True
             'silence_threshold': 2,
-            'num_mels': 80,
+
             'fmin': 125,
             'fmax': 7600,
-            'fft_size': 1024,
-            # shift can be specified by either hop_size or frame_shift_ms
-            'hop_size': 256,
             'frame_shift_ms': None,
             'min_level_db': -100,
             'ref_level_db': 20,
@@ -279,11 +290,13 @@ hparam_dict = {
 # this hp will be used throughout the project
 hp = GetDictWithDotNotation(hparam_dict)
 
+# few calculated values from wavenet model
+hp.m_wave_net.hp.sample_rate = hp.audio.sampling_rate
+hp.m_wave_net.hp.fft_size = hp.audio.n_fft
+hp.m_wave_net.hp.hop_size = hp.audio.hop_length
+hp.m_wave_net.hp.num_mels = hp.audio.mel_n_channels
+
 # adding some calculated hyper parameters
-hp.audio.n_fft = int(hp.audio.sampling_rate * hp.mel_fb.mel_window_length / 1000)
-hp.audio.hop_length = int(hp.audio.sampling_rate * hp.mel_fb.mel_window_step / 1000)
-hp.vad.rate_partial_slices = 1.3
-hp.vad.min_coverage = 0.75
 
 # quick test, below code will not be executed when the file is imported
 # it runs only when this file is directly executed

@@ -1,3 +1,4 @@
+import random
 import struct
 from pathlib import Path
 from typing import Optional, Union
@@ -6,6 +7,18 @@ import librosa
 import numpy as np
 import webrtcvad
 from scipy.ndimage.morphology import binary_dilation
+
+import soundfile as sf
+from scipy import signal
+from librosa.filters import mel
+from numpy.random import RandomState
+import os
+import pickle
+
+from scipy import signal
+from scipy.signal import get_window
+from librosa.filters import mel
+from numpy.random import RandomState
 
 int16_max = (2 ** 15) - 1
 
@@ -37,21 +50,6 @@ def preprocess_wav(fpath_or_wav: Union[str, Path, np.ndarray], hp, source_sr: Op
     wav = trim_long_silences(wav, hp)
 
     return wav
-
-
-def wav_to_mel_spectrogram(wav, hp):
-    """
-    Derives a mel spectrogram ready to be used by the encoder from a preprocessed audio waveform.
-    Note: this not a log-mel spectrogram.
-    """
-    frames = librosa.feature.melspectrogram(
-        wav,
-        hp.audio.sampling_rate,
-        n_fft=hp.audio.n_fft,
-        hop_length=hp.audio.hop_length,
-        n_mels=hp.mel_fb.mel_n_channels
-    )
-    return frames.astype(np.float32).T
 
 
 def trim_long_silences(wav, hp):
@@ -161,6 +159,62 @@ def compute_partial_slices(n_samples: int, hp):
         wav_slices = wav_slices[:-1]
 
     return wav_slices, mel_slices
+
+
+def pySTFT(x, fft_length=1024, hop_length=256):
+    """
+    this function returns spectrogram
+    :param x: np array for the audio file
+    :param fft_length: fft length for fast fourier transform (https://www.youtube.com/watch?v=E8HeD-MUrjY)
+    :param hop_length: hop_lenght is the sliding overlapping window size normally fft//4 works the best
+    :return: spectrogram in the form of np array
+    """
+    x = np.pad(x, int(fft_length // 2), mode='reflect')
+
+    noverlap = fft_length - hop_length
+    shape = x.shape[:-1] + ((x.shape[-1] - noverlap) // hop_length, fft_length)
+    strides = x.strides[:-1] + (hop_length * x.strides[-1], x.strides[-1])
+    result = np.lib.stride_tricks.as_strided(x, shape=shape, strides=strides)
+
+    fft_window = get_window('hann', fft_length, fftbins=True)
+    result = np.fft.rfft(fft_window * result, n=fft_length).T
+
+    return np.abs(result)
+
+
+def butter_highpass(cutoff, fs, order=5):
+    nyq = 0.5 * fs
+    normal_cutoff = cutoff / nyq
+    b, a = signal.butter(order, normal_cutoff, btype='high', analog=False)
+    return b, a
+
+
+def wav_to_mel_spectrogram(wav, hp):
+    """
+    Derives a mel spectrogram ready to be used by the encoder from a preprocessed audio waveform.
+    Note: this not a log-mel spectrogram.
+    """
+
+    # creating mel basis matrix
+    mel_basis = mel(hp.audio.sampling_rate,
+                    hp.audio.n_fft,
+                    fmin=90,
+                    fmax=7600,
+                    n_mels=hp.audio.mel_n_channels).T
+
+    min_level = np.exp(-100 / 20 * np.log(10))
+
+    # getting audio as a np array
+    pp_wav = preprocess_wav(wav, hp)
+
+    # Compute spect
+    spectrogram = pySTFT(pp_wav).T
+    # Convert to mel and normalize
+    mel_spect = np.dot(spectrogram, mel_basis)
+    D_db = 20 * np.log10(np.maximum(min_level, mel_spect)) - 16
+    norm_mel_spect = np.clip((D_db + 100) / 100, 0, 1)
+
+    return norm_mel_spect
 
 
 def shuffle_along_axis(a, axis):
