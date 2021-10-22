@@ -67,6 +67,7 @@ class EmbeddingModelTTDataset(data.Dataset):
     def __get_utterances(self, utterances, idx):
 
         selected_spkr = self.lst_speakers[idx]
+        # print(f"selected speaker = {selected_spkr}")
         lst_utters = self.dict_spkr_utters[selected_spkr]
 
         # randomly select M utterances per speaker
@@ -179,11 +180,17 @@ if __name__ == '__main__':
     from strings.constants import hp
     import os
 
+    hp.m_ge2e.training_N = 2
+
     trian_dl, test_dl = get_train_test_data_loader(hp)
 
     # this will produce 16 items because there are 17 speakers in the training and last is dropped
-    for i, mel_db_batch in enumerate(trian_dl):
-        print(i, mel_db_batch.shape)
+
+    for j in range(1):
+        print("\nFresh batch")
+        for i, mel_db_batch in enumerate(trian_dl):
+            print(i, mel_db_batch.shape)
+
 
     print("\n##### test data loader####")
     # this will produce 4 items because there are 6 speakers in the test and last is dropped

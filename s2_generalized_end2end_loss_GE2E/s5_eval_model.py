@@ -148,6 +148,8 @@ if __name__ == '__main__':
     from strings.constants import hp
     from s2_generalized_end2end_loss_GE2E.s2_model_GE2E_loss_speach_embed import  get_pre_trained_embedding_model
 
+    hp.m_ge2e.best_model_path = "static/model_chk_pts/ge2e/final_epoch_100.model_100_L_11.5260.pth"
+
     # loading a pre-trained model
     model = get_pre_trained_embedding_model(hp)
 

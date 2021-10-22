@@ -12,13 +12,14 @@ cr_obj.save_spectrogram_tisv()
 # to get a user's embedding or 256 dim vector representing user's speaking style
 
 hp.m_ge2e.training_epochs = 100
-hp.m_ge2e.checkpoint_interval = 10
+hp.m_ge2e.checkpoint_interval = 30
 hp.m_ge2e.min_test_loss = 4
+
 
 # creating training object
 train_emb_model_obj = TrainEmbedModel(hp)
 
 # training the model
-model, train_loss, test_loss = train_emb_model_obj.train_model(lr_reduce=20, epoch_print=10, dot_print=1)
+model, train_loss, test_loss = train_emb_model_obj.train_model(lr_reduce=30, epoch_print=10, dot_print=1)
 print(2)
 
