@@ -35,12 +35,15 @@ hparam_dict = {
     "audio": {
         "sampling_rate": 16000,
 
-        "n_fft": 1024,  # 1024 seems to work well
-        "hop_length": 1024 // 4,  # n_fft/4 seems to work better
+        "n_fft": 512,  # 1024 seems to work well
+        "hop_length": 512 // 4,  # n_fft/4 seems to work better
 
         "mel_window_length": 25,  # In milliseconds
         "mel_window_step": 10,  # In milliseconds
         "mel_n_channels": 80,
+
+        # Number of spectrogram frames in a partial utterance
+        "partials_n_frames": 180,  # 1600 ms
 
     },
 

@@ -3,13 +3,14 @@ import random
 
 import numpy as np
 
-from utils.audio_utils import wav_to_mel_spectrogram
+from utils.audio_utils import AudioUtils
 
 
 class CreateSpectrogram:
     def __init__(self, hp, verbose=False):
         self.hp = hp
         self.verbose = verbose
+        self.au = AudioUtils(hp)
 
     def save_spectrogram_tisv(self):
         """
@@ -34,82 +35,89 @@ class CreateSpectrogram:
             per_speaker_folder = os.path.join(audio_path, folder)
             per_speaker_wavs = os.listdir(per_speaker_folder)
 
-            random.shuffle(per_speaker_wavs)
+            if self.verbose:
+                print(f"\nProcessing speaker '{folder}' with '{len(per_speaker_wavs)}' audio files")
+
+            # placeholder utterances np array
+            utterances = np.ndarray((1, 1, 1))
+
+            # looping through all the folders for a given speaker
+            for cnt, utter_wav_file in enumerate(per_speaker_wavs):
+                # path of each utterance
+                utter_wav_file_path = os.path.join(per_speaker_folder, utter_wav_file)
+
+                # if self.verbose:
+                #     print(f"File '{utter_wav_file_path}'")
+
+                # open the individual audio file and load it as a np array
+                # Split the utterance into partials and forward them through the model
+                mel_spects = self.au.get_mel_spects_from_audio(utter_wav_file_path)
+                if cnt == 0:
+                    utterances = mel_spects
+                else:
+                    utterances = np.concatenate((utterances, mel_spects), axis=0)
+
+            # shuffling the utterances
+            utterances = self.au.shuffle_along_axis(utterances, axis=0)
 
             # train test data split
-            train_data = int(len(per_speaker_wavs) * self.hp.m_ge2e.tt_data.train_percent)
+            train_data = int(utterances.shape[0] * self.hp.m_ge2e.tt_data.train_percent)
 
             # save training data
-            lst_train = per_speaker_wavs[:train_data]
-            self.__save_spect_data(lst_train, folder, per_speaker_folder, for_emb=True, training=True)
+            utter_train = utterances[:train_data, :, :]
+            utter_test = utterances[train_data:, :, :]
 
-            # save test data
-            lst_test = per_speaker_wavs[train_data:]
-            self.__save_spect_data(lst_test, folder, per_speaker_folder, for_emb=True, training=False)
+            # saving training data
+            self.__save_mel_spects(utter_train, folder, for_emb=True, training=True)
+
+            # saving test data
+            self.__save_mel_spects(utter_test, folder, for_emb=True, training=False)
+
+            # saving mel-spectrogram as training data for AutoVC model
+            self.__save_mel_spects(utterances, folder, for_emb=False)
 
         print("Spectrograms saved!!")
 
-    def __save_spect_data(self, lst_data, folder, per_speaker_folder, for_emb=True, training=True):
-
-        if self.verbose:
-            print(f"\nProcessing speaker '{folder}' with '{len(lst_data)}' audio files")
-
-        # looping through all the folders for a given speaker
-        for cnt, utter_wav_file in enumerate(lst_data):
-            # path of each utterance
-            utter_wav_file_path = os.path.join(per_speaker_folder, utter_wav_file)
-
-            # if self.verbose:
-            #     print(f"File '{utter_wav_file_path}'")
-
-            # open the individual audio file and load it as a np array
-            # Split the utterance into partials and forward them through the model
-            mel_spects = wav_to_mel_spectrogram(utter_wav_file_path, self.hp)
-            # print(mel_spects.shape)
-            # saving mel-spectrogram as train data for Embedding model
-            spkr_id = utter_wav_file.split(".")[0] + f"_{cnt + 1}"
-            self.__save_mel_spects(mel_spects, folder, spkr_id, for_emb=for_emb, training=training)
-
-            # saving mel-spectrogram as training data for AutoVC model
-            self.__save_mel_spects(mel_spects, folder, spkr_id, for_emb=False)
-
-    def __save_mel_spects(self, mel_spects, folder, spkr_id, for_emb=True, training=True):
-
+    def __save_mel_spects(self, mel_spects, folder, for_emb=True, training=True):
+        purpose = "train"
+        m_name = "GE2E"
         if for_emb:
             if training:
                 dir_path = os.path.join(self.hp.general.project_root, self.hp.m_ge2e.tt_data.train_spects_path)
             else:
+                purpose = "test"
                 dir_path = os.path.join(self.hp.general.project_root, self.hp.m_ge2e.tt_data.test_spects_path)
-
-            self.__save_mel_data(folder, mel_spects, spkr_id, dir_path, m_name="GE2E")
 
         else:
             # AutoVC model calculates loss on self construction therefore no training data required
             # Create folder if does not exist, if exist then ignore
             dir_path = os.path.join(self.hp.general.project_root, self.hp.m_avc.tt_data.train_spects_path)
-            self.__save_mel_data(folder, mel_spects, spkr_id, dir_path, m_name="AutoVC")
+            m_name = "AutoVC"
 
-    def __save_mel_data(self, folder, mel_spects, spkr_id, dir_path, m_name="GE2E"):
+        self.__save_mel_data(folder, mel_spects, dir_path, m_name=m_name, purpose=purpose)
+
+    def __save_mel_data(self, folder, mel_spects, dir_path, m_name="GE2E", purpose="train"):
         # Create folder if does not exist, if exist then ignore
         os.makedirs(dir_path, exist_ok=True)
 
-        # creating data folders and ignoring if exist
-        data_dir_path = os.path.join(dir_path, folder)
-        os.makedirs(data_dir_path, exist_ok=True)
+        # # creating data folders and ignoring if exist
+        # data_dir_path = os.path.join(dir_path, folder)
+        # os.makedirs(data_dir_path, exist_ok=True)
 
         # now saving the numpy files
-        file_full_path = os.path.join(data_dir_path, f"sv_{spkr_id}.npy")
+        file_full_path = os.path.join(dir_path, f"sv_{folder}.npy")
         np.save(file_full_path, mel_spects)
 
         if self.verbose:
-            print(f"'{m_name}: Spectrogram saved and size = {mel_spects.shape}")
+            print(f"'{m_name}_{purpose}: Spectrogram saved and size = {mel_spects.shape}")
 
 
 # quick test, below code will not be executed when the file is imported
 # it runs only when this file is directly executed
 if __name__ == '__main__':
     pass
-    # from strings.constants import hp
-    #
-    # cr_obj = CreateSpectrogram(hp, verbose=True)
-    # cr_obj.save_spectrogram_tisv()
+    from strings.constants import hp
+
+    hp.raw_audio.raw_audio_path = "static/raw_data/wavs"
+    cr_obj = CreateSpectrogram(hp, verbose=False)
+    cr_obj.save_spectrogram_tisv()

@@ -4,8 +4,6 @@ import numpy as np
 import torch.utils.data as data
 import os
 
-from utils.audio_utils import shuffle_along_axis
-
 
 class EmbeddingModelTTDataset(data.Dataset):
     """
@@ -16,6 +14,9 @@ class EmbeddingModelTTDataset(data.Dataset):
 
     def __init__(self, data_path, hp, training=True):
 
+        # data path saved
+        self.data_path = data_path
+
         # getting all the folders/speakers
         data_iter = iter(os.walk(data_path))
 
@@ -25,27 +26,10 @@ class EmbeddingModelTTDataset(data.Dataset):
         # 2rd item -> files in current folder
 
         iter_data = next(data_iter)
-        data_path = iter_data[0]
-        self.lst_speakers = iter_data[1]
+        self.lst_spkr_np_files = iter_data[2]
 
         # getting total speakers
-        self.data_len = len(self.lst_speakers)
-
-        self.dict_spkr_utters = {}
-        for spr in self.lst_speakers:
-            d_path = os.path.join(data_path, spr)
-            utters = []
-            for utter in os.walk(d_path):
-                for f in utter[2]:
-                    file_path = os.path.join(utter[0], f)
-                    utters.append(file_path)
-
-            # storing the absolute path of spectrogram utterances for each speaker
-            self.dict_spkr_utters[spr] = utters
-
-        # prints speaker id and np spect count
-        # for k, v in self.utter_per_speaker.items():
-        #     print(k, len(v))
+        self.data_len = len(self.lst_spkr_np_files)
 
         # setting number of utterance to fetch per speaker
         if training:
@@ -53,72 +37,17 @@ class EmbeddingModelTTDataset(data.Dataset):
             self.min_utter_len = hp.m_ge2e.tt_data.min_train_utter_len
             # shuffle the speaker's list
             # if this dataset belongs to training then shuffle the list of speakers
-            random.shuffle(self.lst_speakers)
+            random.shuffle(self.lst_spkr_np_files)
 
         else:
             self.utter_num = hp.m_ge2e.test_M
             self.min_utter_len = hp.m_ge2e.tt_data.min_test_utter_len
 
         self.training = training
+        self.hp = hp
 
     def __len__(self):
         return self.data_len
-
-    def __get_utterances(self, utterances, idx):
-
-        selected_spkr = self.lst_speakers[idx]
-        # print(f"selected speaker = {selected_spkr}")
-        lst_utters = self.dict_spkr_utters[selected_spkr]
-
-        # randomly select M utterances per speaker
-        utter_idx = np.random.randint(0, len(lst_utters), self.utter_num)
-
-        # we will run a loop as len(utter_idx) to getch M utterances since test data is = self.min_utter_len
-        # for train data of arbitary length, we will fetch n utterences of length self.min_utter_len such that
-        # x * self.min_utter_len = M
-
-        for idx in utter_idx:
-
-            # if the utterances = self.utter_num then stop the loop
-            if len(utterances) >= self.utter_num:
-                break
-
-            utter_path = lst_utters[idx]
-            utter = np.load(utter_path)
-
-            # checking if utter length is less than min len then we will do some padding
-            # but also checking if length is not too small. E.g. is length is 20 then just discard this utterance
-            st = 0
-            ed = st + self.min_utter_len
-            tmp_utter = None
-            while utter.shape[0] > 100:
-                # if the utterances = self.utter_num then stop the loop
-                if len(utterances) >= self.utter_num:
-                    break
-
-                if utter.shape[0] < self.min_utter_len:
-                    len_pad = self.min_utter_len - utter.shape[0]
-                    tmp_utter = np.pad(utter, ((0, len_pad), (0, 0)), 'constant')
-
-                elif utter.shape[0] > self.min_utter_len:
-                    tmp_utter = utter[st:ed, :]
-                    # update the utter
-                elif utter.shape[0] == self.min_utter_len:
-                    tmp_utter = utter
-
-                if len(tmp_utter) and tmp_utter.shape[0] == self.min_utter_len:
-                    utterances.append(tmp_utter)
-
-                # reducing the current content of utter
-                utter = utter[ed:, :]
-
-                st = st + ed
-                ed = self.min_utter_len + ed
-
-        # shuffling the utterances
-        random.shuffle(utterances)
-
-        return utterances
 
     def __getitem__(self, idx):
         """
@@ -128,20 +57,26 @@ class EmbeddingModelTTDataset(data.Dataset):
         :return: spectrogram utterance
         """
 
-        utterances = []
-        utterances = self.__get_utterances(utterances, idx)
+        # getting the file path
+        spr_path = self.lst_spkr_np_files[idx]
+        spr_path = os.path.join(self.data_path, spr_path)
 
-        utters = np.array(utterances)
-        while utters.shape[0] < self.utter_num:
-            utterances = self.__get_utterances(utterances, idx)
-            utters = np.array(utterances)
+        # loading the utterances
+        spr_utters = np.load(spr_path)
 
-        # checking the length of utterances returned for training
-        assert utters.shape[0] == self.utter_num
-        assert utters.shape[1] == self.min_utter_len
+        # get random idx to pull utterances
+        utter_idx = np.random.randint(0, spr_utters.shape[0], self.utter_num)
 
-        shuffle_along_axis(utters, axis=0)
-        return utters
+        # getting random utterances
+        spr_rnd_utters = spr_utters[utter_idx, :, :]
+
+        # getting random clipping position
+        random_clip = np.random.randint(0, spr_utters.shape[1] - self.min_utter_len - 1)
+
+        # clipping the utterances
+        spr_rnd_utters = spr_rnd_utters[:, random_clip:random_clip + self.min_utter_len, :]
+
+        return spr_rnd_utters
 
 
 def get_train_test_data_loader(hp):
@@ -177,24 +112,29 @@ def get_train_test_data_loader(hp):
 # quick test, below code will not be executed when the file is imported
 # it runs only when this file is directly executed
 if __name__ == '__main__':
-    from strings.constants import hp
-    import os
-
-    hp.m_ge2e.training_N = 2
-
-    trian_dl, test_dl = get_train_test_data_loader(hp)
-
-    # this will produce 16 items because there are 17 speakers in the training and last is dropped
-
-    for j in range(1):
-        print("\nFresh batch")
-        for i, mel_db_batch in enumerate(trian_dl):
-            print(i, mel_db_batch.shape)
-
-
-    print("\n##### test data loader####")
-    # this will produce 4 items because there are 6 speakers in the test and last is dropped
-    for i, mel_db_batch in enumerate(test_dl):
-        print(i, mel_db_batch.shape)
-
-    print(1)
+    pass
+    #
+    # from strings.constants import hp
+    # import os
+    #
+    # hp.m_ge2e.training_N = 2
+    #
+    # trian_dl, test_dl = get_train_test_data_loader(hp)
+    #
+    # # this will produce 16 items because there are 17 speakers in the training and last is dropped
+    #
+    # itr_cnt = 1
+    #
+    # for j in range(itr_cnt):
+    #     print("\nFresh batch")
+    #     for i, mel_db_batch in enumerate(trian_dl):
+    #         print(i, mel_db_batch.shape)
+    #
+    #
+    # print("\n##### test data loader####")
+    # # this will produce 4 items because there are 6 speakers in the test and last is dropped
+    # for j in range(itr_cnt):
+    #     for i, mel_db_batch in enumerate(test_dl):
+    #         print(i, mel_db_batch.shape)
+    #
+    # print(1)
