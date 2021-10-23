@@ -60,9 +60,11 @@ def get_auto_vc_data_loader(hp, batch_size=1):
 # quick test, below code will not be executed when the file is imported
 # it runs only when this file is directly executed
 if __name__ == '__main__':
-    from strings.constants import hp
-
-    train_loader = get_auto_vc_data_loader(hp)
-
-    for i, res in enumerate(train_loader):
-        print(i, res[0].shape, res[1].shape, res[2])
+    pass
+    #
+    # from strings.constants import hp
+    #
+    # train_loader = get_auto_vc_data_loader(hp, batch_size=2)
+    #
+    # for i, res in enumerate(train_loader):
+    #     print(i, res[0].shape, res[1].shape, res[2])

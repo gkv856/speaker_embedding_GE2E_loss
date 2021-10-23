@@ -106,6 +106,10 @@ class TrainAutoVCNetwork(object):
             # each time it will pick random utterance for each 24 speakers
 
             for utter_specs, emb, spr in self.data_loader:
+
+                utter_specs = torch.tensor(utter_specs).float()
+                emb = torch.tensor(emb).float()
+
                 utter_specs = utter_specs.to(self.hp.general.device)
                 emb = emb.to(self.hp.general.device)
 

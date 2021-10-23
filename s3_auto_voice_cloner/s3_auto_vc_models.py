@@ -73,7 +73,7 @@ class EncoderModel(nn.Module):
             # input dimensions = n_mels + embedding dims for the first layer
             # (bkz we will concat embeds and mels specs)
             # for subsequent layers it will = out_dims
-            in_dims = hp.mel_fb.mel_n_channels + hp.m_ge2e.model_embedding_size if i == 0 else hp.m_avc.m_enc.out_dims
+            in_dims = hp.audio.mel_n_channels + hp.m_ge2e.model_embedding_size if i == 0 else hp.m_avc.m_enc.out_dims
 
             conv_layer = ConvNorm(in_dims,
                                   hp.m_avc.m_enc.out_dims,
@@ -173,7 +173,7 @@ class DecoderModel(nn.Module):
                                 hp.m_avc.m_dec.lstm_out_stack,
                                 batch_first=True)
 
-        self.linear_projection = LinearNorm(hp.m_avc.m_dec.out_dim_lstm, hp.mel_fb.mel_n_channels)
+        self.linear_projection = LinearNorm(hp.m_avc.m_dec.out_dim_lstm, hp.audio.mel_n_channels)
 
     def forward(self, x):
         """
@@ -218,7 +218,7 @@ class Postnet(nn.Module):
         self.convolutions = nn.ModuleList()
 
         # creating 1st conv layer with different input and out
-        self.convolutions.append(ConvNorm(hp.mel_fb.mel_n_channels,
+        self.convolutions.append(ConvNorm(hp.audio.mel_n_channels,
                                           hp.m_avc.m_pn.out_dims,
                                           kernel_size=5,
                                           stride=1,
@@ -240,7 +240,7 @@ class Postnet(nn.Module):
 
         # adding the final output conv layer
         self.convolutions.append(ConvNorm(hp.m_avc.m_pn.out_dims,
-                                          hp.mel_fb.mel_n_channels,
+                                          hp.audio.mel_n_channels,
                                           kernel_size=5,
                                           stride=1,
                                           padding=2,
@@ -270,7 +270,7 @@ if __name__ == '__main__':
 
     # creating some random inputs to test the model
     batch_size = 2
-    specs = torch.tensor(np.random.rand(batch_size, hp.m_avc.s2.mul_32_utter_len, hp.mel_fb.mel_n_channels)).float()
+    specs = torch.tensor(np.random.rand(batch_size, hp.m_avc.s2.mul_32_utter_len, hp.audio.mel_n_channels)).float()
     emb = torch.tensor(np.random.rand(batch_size, hp.m_ge2e.model_embedding_size)).float()
 
     codes = enc_model(specs, emb)
@@ -289,7 +289,7 @@ if __name__ == '__main__':
     x = torch.tensor(np.random.rand(batch_size, hp.m_avc.s2.mul_32_utter_len, in_dims)).float()
 
     res = dec_model(x)
-    assert res.shape[-1] == hp.mel_fb.mel_n_channels
+    assert res.shape[-1] == hp.audio.mel_n_channels
     # print(x.shape, res.shape)
 
     # #############################
@@ -301,7 +301,7 @@ if __name__ == '__main__':
     # print(pn_model)
 
     # creating some random inputs to test the model
-    x = torch.tensor(np.random.rand(batch_size, hp.mel_fb.mel_n_channels, hp.m_avc.s2.mul_32_utter_len)).float()
+    x = torch.tensor(np.random.rand(batch_size, hp.audio.mel_n_channels, hp.m_avc.s2.mul_32_utter_len)).float()
 
     res = pn_model(x)
     # print(x.shape, res.shape)

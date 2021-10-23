@@ -25,3 +25,7 @@ wave_net_model, wave_net_hp = get_wave_net_model(hp)
 waveform = convert_mel_specs_to_audio(wave_net_model, wave_net_hp, hp, mel_specs=c)
 sf.write('reconstructed_audio.wav', waveform, 16000, 'PCM_24')
 print(1)
+
+# ok
+# ok2
+# ok3

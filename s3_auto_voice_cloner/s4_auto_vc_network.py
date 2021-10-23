@@ -84,18 +84,21 @@ if __name__ == '__main__':
 
     train_dl = get_auto_vc_data_loader(hp, batch_size=1)
     for i, res in enumerate(train_dl):
-        specs = res[0]  # torch.tensor(res[0]).float()
-        emb = res[1]  # torch.tensor(res[1]).float()
+        # specs = res[0]  # torch.tensor(res[0]).float()
+        # emb = res[1]  # torch.tensor(res[1]).float()
+
+        specs = torch.tensor(res[0]).float()
+        emb = torch.tensor(res[1]).float()
         # print(emb.shape, specs.shape)
 
         mel_outputs, mel_outputs_postnet, generated_embs = auto_vc_net(specs, emb, emb)
         # print("res = ", mel_outputs.shape, mel_outputs_postnet.shape, generated_embs.shape)
 
         assert mel_outputs.shape[1] == hp.m_avc.s2.mul_32_utter_len
-        assert mel_outputs.shape[2] == hp.mel_fb.mel_n_channels
+        assert mel_outputs.shape[2] == hp.audio.mel_n_channels
 
         assert mel_outputs_postnet.shape[1] == hp.m_avc.s2.mul_32_utter_len
-        assert mel_outputs_postnet.shape[2] == hp.mel_fb.mel_n_channels
+        assert mel_outputs_postnet.shape[2] == hp.audio.mel_n_channels
 
         assert generated_embs.shape[1] == hp.m_ge2e.model_embedding_size
 
