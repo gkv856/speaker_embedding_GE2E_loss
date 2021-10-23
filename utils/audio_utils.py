@@ -56,8 +56,9 @@ class AudioUtils:
         # norm_mel_spect is saved a slice in 3d array
         # shape norm_mel_spects = (16, 180, 80)
         if partial_slices:
-            norm_mel_spects = np.array([norm_mel_spect[s] for s in mel_slices])
-            return norm_mel_spects
+            partial_norm_mel_spects = np.array([norm_mel_spect[s] for s in mel_slices])
+            # print(f"Partial norm mel spetc = {partial_norm_mel_spects.shape}")
+            return partial_norm_mel_spects
 
         return norm_mel_spect
 

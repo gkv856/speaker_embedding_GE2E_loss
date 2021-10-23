@@ -8,6 +8,7 @@ try:
 except:
     from AVC.utils.audio_utils import AudioUtils
 
+
 class CreateSpectrogram:
     def __init__(self, hp, verbose=False):
         self.hp = hp
@@ -53,7 +54,7 @@ class CreateSpectrogram:
 
                 # open the individual audio file and load it as a np array
                 # Split the utterance into partials and forward them through the model
-                mel_spects = self.au.get_mel_spects_from_audio(utter_wav_file_path)
+                mel_spects = self.au.get_mel_spects_from_audio(utter_wav_file_path, partial_slices=True)
                 if cnt == 0:
                     utterances = mel_spects
                 else:

@@ -267,8 +267,7 @@ class TrainEmbedModel:
                 self.__save_model(hp, e, mean_batch_train_loss, verbose=True)
 
         # save final model
-        save_model_filename = f"final_epoch_{e + 1}.model"
-        self.__save_model(hp, e, mean_batch_train_loss, name=save_model_filename, verbose=True)
+        self.__save_model(hp, e, mean_batch_train_loss, name="final_epoch", verbose=True)
 
         return self.model, self.train_losses, self.test_losses
 
