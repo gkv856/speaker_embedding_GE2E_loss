@@ -2,8 +2,10 @@ from pathlib import Path
 
 import torch
 
-# project name
-from utils.dict_to_dot import GetDictWithDotNotation
+try:
+    from utils.dict_to_dot import GetDictWithDotNotation
+except:
+    from AVC.utils.dict_to_dot import GetDictWithDotNotation
 
 PROJECT_NAME = "AutoVoiceConversion"
 

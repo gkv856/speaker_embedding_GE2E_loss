@@ -3,9 +3,15 @@ import os
 import random
 import time
 import numpy as np
-from s2_generalized_end2end_loss_GE2E.s1_dataset_loader import get_train_test_data_loader
-from s2_generalized_end2end_loss_GE2E.s2_model_GE2E_loss_speach_embed import ModelGE2ELossSpeachEmbed
-from s2_generalized_end2end_loss_GE2E.s3_loss_function_GE2E import GE2ELoss
+
+try:
+    from s2_generalized_end2end_loss_GE2E.s1_dataset_loader import get_train_test_data_loader
+    from s2_generalized_end2end_loss_GE2E.s2_model_GE2E_loss_speach_embed import ModelGE2ELossSpeachEmbed
+    from s2_generalized_end2end_loss_GE2E.s3_loss_function_GE2E import GE2ELoss
+except:
+    from AVC.s2_generalized_end2end_loss_GE2E.s1_dataset_loader import get_train_test_data_loader
+    from AVC.s2_generalized_end2end_loss_GE2E.s2_model_GE2E_loss_speach_embed import ModelGE2ELossSpeachEmbed
+    from AVC.s2_generalized_end2end_loss_GE2E.s3_loss_function_GE2E import GE2ELoss
 
 
 class TrainEmbedModel:
@@ -270,14 +276,16 @@ class TrainEmbedModel:
 # quick test, below code will not be executed when the file is imported
 # it runs only when this file is directly executed
 if __name__ == '__main__':
-    from strings.constants import hp
-
-    hp.m_ge2e.training_epochs = 100
-    hp.m_ge2e.checkpoint_interval = 10
-
-    # creating training object
-    train_emb_model_obj = TrainEmbedModel(hp)
-
-    # training the model
-    model, train_loss, test_loss = train_emb_model_obj.train_model(lr_reduce=20, epoch_print=10, dot_print=1)
-    print(1)
+    pass
+    #
+    # from strings.constants import hp
+    #
+    # hp.m_ge2e.training_epochs = 100
+    # hp.m_ge2e.checkpoint_interval = 10
+    #
+    # # creating training object
+    # train_emb_model_obj = TrainEmbedModel(hp)
+    #
+    # # training the model
+    # model, train_loss, test_loss = train_emb_model_obj.train_model(lr_reduce=20, epoch_print=10, dot_print=1)
+    # print(1)

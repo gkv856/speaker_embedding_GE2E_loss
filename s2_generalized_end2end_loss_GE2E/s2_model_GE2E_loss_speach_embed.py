@@ -2,6 +2,7 @@ import torch.nn as nn
 import torch
 import os
 
+
 class ModelGE2ELossSpeachEmbed(nn.Module):
 
     def __init__(self, hp):
@@ -54,23 +55,25 @@ def get_pre_trained_embedding_model(hp):
 # quick test, below code will not be executed when the file is imported
 # it runs only when this file is directly executed
 if __name__ == '__main__':
-    from strings.constants import hp
-    from s2_generalized_end2end_loss_GE2E.s1_dataset_loader import get_train_test_data_loader
-    import os
+    pass
 
-    # testing the untrained model
-    tmp_model = ModelGE2ELossSpeachEmbed(hp)
-
-    train_dl, test_dl = get_train_test_data_loader(hp)
-
-    total_utterances = hp.m_ge2e.training_N * hp.m_ge2e.training_M
-
-    for mel_db_batch in train_dl:
-        # mel is returned as 4x5x160x40 (batch x num_speakerxutterlenxn_mel)and we will reshape it to 20x160x40
-        new_shape = (total_utterances, mel_db_batch.shape[2], mel_db_batch.shape[3])
-        mel_db_batch = torch.reshape(mel_db_batch, new_shape)
-        res = tmp_model(mel_db_batch)
-        break
-
-    assert res.shape[-1] == hp.m_ge2e.model_embedding_size
-    # print(res.shape, res)
+    # from strings.constants import hp
+    # from s2_generalized_end2end_loss_GE2E.s1_dataset_loader import get_train_test_data_loader
+    # import os
+    #
+    # # testing the untrained model
+    # tmp_model = ModelGE2ELossSpeachEmbed(hp)
+    #
+    # train_dl, test_dl = get_train_test_data_loader(hp)
+    #
+    # total_utterances = hp.m_ge2e.training_N * hp.m_ge2e.training_M
+    #
+    # for mel_db_batch in train_dl:
+    #     # mel is returned as 4x5x160x40 (batch x num_speakerxutterlenxn_mel)and we will reshape it to 20x160x40
+    #     new_shape = (total_utterances, mel_db_batch.shape[2], mel_db_batch.shape[3])
+    #     mel_db_batch = torch.reshape(mel_db_batch, new_shape)
+    #     res = tmp_model(mel_db_batch)
+    #     break
+    #
+    # assert res.shape[-1] == hp.m_ge2e.model_embedding_size
+    # # print(res.shape, res)

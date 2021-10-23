@@ -1,7 +1,6 @@
 import torch.nn as nn
 import torch.nn.functional as F
 import torch
-import torch.autograd as grad
 
 
 class GE2ELoss(nn.Module):
@@ -131,18 +130,23 @@ class GE2ELoss(nn.Module):
 # quick test, below code will not be executed when the file is imported
 # it runs only when this file is directly executed
 if __name__ == '__main__':
-    from strings.constants import hp
-    # testing the loss function
+    pass
 
-    w = grad.Variable(torch.tensor(1.0))
-    b = grad.Variable(torch.tensor(0.0))
+    # from strings.constants import hp
 
-    lst = [[0, 1, 0], [0, 0, 1], [0, 1, 0], [0, 1, 0], [1, 0, 0], [1, 0, 0]]
-    embeddings = torch.tensor(lst).to(torch.float).reshape(3, 2, 3)
-    centroids = GE2ELoss.get_centroids(embeddings)
-    cos_sim = GE2ELoss.get_cos_sim(embeddings, centroids, hp)
-    sim_matrix = w * cos_sim + b
-    loss, per_embedding_loss = GE2ELoss.calc_loss(sim_matrix, hp)
+    # import torch.autograd as grad
 
-    print(loss)
-    print(per_embedding_loss)
+    # # testing the loss function
+    #
+    # w = grad.Variable(torch.tensor(1.0))
+    # b = grad.Variable(torch.tensor(0.0))
+    #
+    # lst = [[0, 1, 0], [0, 0, 1], [0, 1, 0], [0, 1, 0], [1, 0, 0], [1, 0, 0]]
+    # embeddings = torch.tensor(lst).to(torch.float).reshape(3, 2, 3)
+    # centroids = GE2ELoss.get_centroids(embeddings)
+    # cos_sim = GE2ELoss.get_cos_sim(embeddings, centroids, hp)
+    # sim_matrix = w * cos_sim + b
+    # loss, per_embedding_loss = GE2ELoss.calc_loss(sim_matrix, hp)
+    #
+    # print(loss)
+    # print(per_embedding_loss)

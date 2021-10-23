@@ -3,8 +3,10 @@ import random
 
 import numpy as np
 
-from utils.audio_utils import AudioUtils
-
+try:
+    from utils.audio_utils import AudioUtils
+except:
+    from AVC.utils.audio_utils import AudioUtils
 
 class CreateSpectrogram:
     def __init__(self, hp, verbose=False):

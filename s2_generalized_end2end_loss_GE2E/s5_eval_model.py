@@ -1,4 +1,3 @@
-from s2_generalized_end2end_loss_GE2E.s1_dataset_loader import get_train_test_data_loader
 import torch
 import torch.autograd as grad
 import numpy as np
@@ -6,7 +5,12 @@ import matplotlib.pyplot as plt
 
 from sklearn.manifold import TSNE
 
-from s2_generalized_end2end_loss_GE2E.s3_loss_function_GE2E import GE2ELoss
+try:
+    from s2_generalized_end2end_loss_GE2E.s1_dataset_loader import get_train_test_data_loader
+    from s2_generalized_end2end_loss_GE2E.s3_loss_function_GE2E import GE2ELoss
+except:
+    from AVC.s2_generalized_end2end_loss_GE2E.s1_dataset_loader import get_train_test_data_loader
+    from AVC.s2_generalized_end2end_loss_GE2E.s3_loss_function_GE2E import GE2ELoss
 
 
 def calculate_ERR(model, hp, N=4, M=16):
@@ -145,18 +149,20 @@ def plot_scatter(model, hp, N=4, M=16):
 # quick test, below code will not be executed when the file is imported
 # it runs only when this file is directly executed
 if __name__ == '__main__':
-    from strings.constants import hp
-    from s2_generalized_end2end_loss_GE2E.s2_model_GE2E_loss_speach_embed import  get_pre_trained_embedding_model
-
-    hp.m_ge2e.best_model_path = "static/model_chk_pts/ge2e/final_epoch_100.model_100_L_11.5260.pth"
-
-    # loading a pre-trained model
-    model = get_pre_trained_embedding_model(hp)
-
-    # calculating ERR
-    calculate_ERR(model, hp, 4, 8)
-
-    # plotting speaker embeddings
-    plot_scatter(model, hp, 4, 16)
-
-    print(1)
+    pass
+    #
+    # from strings.constants import hp
+    # from s2_generalized_end2end_loss_GE2E.s2_model_GE2E_loss_speach_embed import  get_pre_trained_embedding_model
+    #
+    # hp.m_ge2e.best_model_path = "static/model_chk_pts/ge2e/final_epoch_100.model_100_L_11.5260.pth"
+    #
+    # # loading a pre-trained model
+    # model = get_pre_trained_embedding_model(hp)
+    #
+    # # calculating ERR
+    # calculate_ERR(model, hp, 4, 8)
+    #
+    # # plotting speaker embeddings
+    # plot_scatter(model, hp, 4, 16)
+    #
+    # print(1)
