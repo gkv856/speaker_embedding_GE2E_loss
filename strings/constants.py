@@ -4,15 +4,24 @@ import torch
 
 try:
     from utils.dict_to_dot import GetDictWithDotNotation
+
+    PROJECT_NAME = "AutoVoiceConversion"
+
+    current_dir = Path(__file__)
+    PROJECT_DIR = [p for p in current_dir.parents if p.parts[-1] == PROJECT_NAME][0]
+    device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+    print(f"Device type available = '{device}'")
+
 except:
     from AVC.utils.dict_to_dot import GetDictWithDotNotation
 
-PROJECT_NAME = "AutoVoiceConversion"
+    PROJECT_NAME = "AVC"
 
-current_dir = Path(__file__)
-PROJECT_DIR = [p for p in current_dir.parents if p.parts[-1] == PROJECT_NAME][0]
-device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-print(f"Device type available = '{device}'")
+    current_dir = Path("/content/AVC/strings/constants.py")
+    PROJECT_DIR = [p for p in current_dir.parents if p.parts[-1] == PROJECT_NAME][0]
+    device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+    print(f"Device type available = '{device}'")
+
 
 hparam_dict = {
 
