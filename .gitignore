@@ -1,5 +1,4 @@
 *.xml
 *.iml
 *__init__*
-model_chk_pts
 *.npy

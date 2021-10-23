@@ -62,9 +62,9 @@ def get_auto_vc_data_loader(hp, batch_size=1):
 if __name__ == '__main__':
     pass
     #
-    # from strings.constants import hp
-    #
-    # train_loader = get_auto_vc_data_loader(hp, batch_size=2)
-    #
-    # for i, res in enumerate(train_loader):
-    #     print(i, res[0].shape, res[1].shape, res[2])
+    from strings.constants import hp
+
+    train_loader = get_auto_vc_data_loader(hp, batch_size=2)
+
+    for i, res in enumerate(train_loader):
+        print(i, res[0].shape, res[1].shape, res[2])
