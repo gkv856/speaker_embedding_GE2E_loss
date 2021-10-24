@@ -9,14 +9,11 @@ import soundfile as sf
 
 try:
     from s3_auto_voice_cloner.s4_auto_vc_network import get_pre_trained_auto_vc_network
-    from s3_auto_voice_cloner.s7_mel_audio_setup import get_wave_net_model
-
     from utils.audio_utils import AudioUtils
     from utils.dict_to_dot import GetDictWithDotNotation
 
 except:
     from AVC.s3_auto_voice_cloner.s4_auto_vc_network import get_pre_trained_auto_vc_network
-    from AVC.s3_auto_voice_cloner.s7_mel_audio_setup import get_wave_net_model
     from AVC.utils.audio_utils import AudioUtils
     from AVC.utils.dict_to_dot import GetDictWithDotNotation
 
@@ -43,7 +40,7 @@ class VoiceCloner:
         # loading audio utils
         self.au = AudioUtils(hp)
 
-        self.wavenet_model, self.w_hp = get_wave_net_model(hp)
+        self.wavenet_model, self.w_hp = self.get_wave_net_model(hp)
 
         self.tqdm = tqdm
 
