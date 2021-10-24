@@ -10,6 +10,7 @@ from strings.constants import hp
 import soundfile as sf
 import os
 
+hp.m_avc.gen.best_model_path = "static/model_chk_pts/autovc/AVC_final_1000.pth"
 vcs_obj = VoiceCloner(hp, tqdm)
 
 path_audio = "static/raw_data/wavs/p225/p225_003.wav"
