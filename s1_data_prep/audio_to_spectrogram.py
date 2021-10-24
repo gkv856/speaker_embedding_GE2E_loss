@@ -45,7 +45,8 @@ class CreateSpectrogram:
             utterances = np.ndarray((1, 1, 1))
 
             # looping through all the folders for a given speaker
-            for cnt, utter_wav_file in enumerate(per_speaker_wavs):
+            cnt = 0
+            for utter_wav_file in per_speaker_wavs:
                 # path of each utterance
                 utter_wav_file_path = os.path.join(per_speaker_folder, utter_wav_file)
 
@@ -55,10 +56,13 @@ class CreateSpectrogram:
                 # open the individual audio file and load it as a np array
                 # Split the utterance into partials and forward them through the model
                 mel_spects = self.au.get_mel_spects_from_audio(utter_wav_file_path, partial_slices=True)
-                if cnt == 0:
-                    utterances = mel_spects
-                else:
-                    utterances = np.concatenate((utterances, mel_spects), axis=0)
+                if len(mel_spects):
+                    if cnt == 0:
+                        utterances = mel_spects
+                    else:
+                        utterances = np.concatenate((utterances, mel_spects), axis=0)
+
+                    cnt += 1
 
             # shuffling the utterances
             utterances = self.au.shuffle_along_axis(utterances, axis=0)

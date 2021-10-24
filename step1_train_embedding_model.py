@@ -4,7 +4,7 @@ from s1_data_prep.audio_to_spectrogram import CreateSpectrogram
 from s2_generalized_end2end_loss_GE2E.s4_train_embed_model import TrainEmbedModel
 
 # step 1 prepare the spectrogram from the raw audio file
-# hp.raw_audio.raw_audio_path = "static/raw_data/librispeech_test-other"
+hp.raw_audio.raw_audio_path = "static/raw_data/librispeech_test-other"
 cr_obj = CreateSpectrogram(hp)
 cr_obj.save_spectrogram_tisv()
 
