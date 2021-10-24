@@ -4,8 +4,12 @@ import os
 import time
 import numpy as np
 
-from s3_auto_voice_cloner.s2_auto_vc_dataloader import get_auto_vc_data_loader
-from s3_auto_voice_cloner.s4_auto_vc_network import AutoVCNetwork
+try:
+    from s3_auto_voice_cloner.s2_auto_vc_dataloader import get_auto_vc_data_loader
+    from s3_auto_voice_cloner.s4_auto_vc_network import AutoVCNetwork
+except:
+    from AVC.s3_auto_voice_cloner.s2_auto_vc_dataloader import get_auto_vc_data_loader
+    from AVC.s3_auto_voice_cloner.s4_auto_vc_network import AutoVCNetwork
 
 
 class TrainAutoVCNetwork(object):

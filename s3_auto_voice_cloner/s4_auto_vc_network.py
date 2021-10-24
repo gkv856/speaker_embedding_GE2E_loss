@@ -2,10 +2,15 @@ import torch
 import torch.nn as nn
 import numpy as np
 import torch.nn.functional as F
-
-from s3_auto_voice_cloner.s2_auto_vc_dataloader import get_auto_vc_data_loader
-from s3_auto_voice_cloner.s3_auto_vc_models import EncoderModel, DecoderModel, Postnet
 import os
+
+try:
+    from s3_auto_voice_cloner.s2_auto_vc_dataloader import get_auto_vc_data_loader
+    from s3_auto_voice_cloner.s3_auto_vc_models import EncoderModel, DecoderModel, Postnet
+except:
+    from AVC.s3_auto_voice_cloner.s2_auto_vc_dataloader import get_auto_vc_data_loader
+    from AVC.s3_auto_voice_cloner.s3_auto_vc_models import EncoderModel, DecoderModel, Postnet
+
 
 
 class AutoVCNetwork(nn.Module):

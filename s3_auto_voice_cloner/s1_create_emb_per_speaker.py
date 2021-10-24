@@ -3,7 +3,10 @@ import torch
 import os
 import pickle
 
-from s2_generalized_end2end_loss_GE2E.s2_model_GE2E_loss_speach_embed import get_pre_trained_embedding_model
+try:
+    from s2_generalized_end2end_loss_GE2E.s2_model_GE2E_loss_speach_embed import get_pre_trained_embedding_model
+except:
+    from AVC.s2_generalized_end2end_loss_GE2E.s2_model_GE2E_loss_speach_embed import get_pre_trained_embedding_model
 
 
 def create_embbedings_per_speaker(hp):

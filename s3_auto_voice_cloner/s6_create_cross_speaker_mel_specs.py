@@ -4,7 +4,10 @@ import numpy as np
 import torch
 import random
 
-from s3_auto_voice_cloner.s4_auto_vc_network import get_pre_trained_auto_vc_network
+try:
+    from s3_auto_voice_cloner.s4_auto_vc_network import get_pre_trained_auto_vc_network
+except:
+    from AVC.s3_auto_voice_cloner.s4_auto_vc_network import get_pre_trained_auto_vc_network
 
 
 def create_mel_specs_per_speaker(hp):
