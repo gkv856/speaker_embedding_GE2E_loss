@@ -20,9 +20,10 @@ except:
 
 class VoiceCloner:
 
-    def __init__(self, hp, tqdm, verbose=False):
+    def __init__(self, hp, tqdm, verbose=False, absolute_path=False):
         self.hp = hp
         self.verbose = verbose
+        self.absolute_path = absolute_path
 
         # loading pickle files created
         p1 = os.path.join(hp.general.project_root, hp.m_avc.s1.speaker_embs_metadata_path)
@@ -32,7 +33,7 @@ class VoiceCloner:
         self.spkr_emb_md = pickle.load(open(speaker_embs_metadata_file, "rb"))
 
         # loading a pre-trained Auto Voice Clone model
-        self.avc_model = get_pre_trained_auto_vc_network(hp)
+        self.avc_model = get_pre_trained_auto_vc_network(hp, absolute_path=self.absolute_path)
 
         # loading audio utils
         self.au = AudioUtils(hp)

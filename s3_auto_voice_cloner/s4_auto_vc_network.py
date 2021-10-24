@@ -12,7 +12,6 @@ except:
     from AVC.s3_auto_voice_cloner.s3_auto_vc_models import EncoderModel, DecoderModel, Postnet
 
 
-
 class AutoVCNetwork(nn.Module):
     """
         AutoVCNetwork combines all the three models/networks defined above. The training and loss will be run on this network
@@ -64,11 +63,15 @@ class AutoVCNetwork(nn.Module):
         return mel_outputs, mel_outputs_postnet, torch.cat(codes, dim=-1)
 
 
-def get_pre_trained_auto_vc_network(hp):
+def get_pre_trained_auto_vc_network(hp, absolute_path=False):
     # creating an instance of the AutoVC network
     # sending the model to the GPU (if available)
     auto_vc_net = AutoVCNetwork(hp).to(hp.general.device)
-    model_path = os.path.join(hp.general.project_root, hp.m_avc.gen.best_model_path)
+
+    if absolute_path:
+        model_path = hp.m_avc.gen.best_model_path
+    else:
+        model_path = os.path.join(hp.general.project_root, hp.m_avc.gen.best_model_path)
 
     # load weights as dictionary
     weight_dict = torch.load(model_path, map_location=hp.general.device)
