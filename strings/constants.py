@@ -46,8 +46,8 @@ hparam_dict = {
     "audio": {
         "sampling_rate": 16000,
 
-        "n_fft": 512,  # 1024 seems to work well
-        "hop_length": 512 // 4,  # n_fft/4 seems to work better
+        "n_fft": 1024,  # 1024 seems to work well
+        "hop_length": 1024 // 4,  # n_fft/4 seems to work better
 
         "mel_window_length": 25,  # In milliseconds
         "mel_window_step": 10,  # In milliseconds
@@ -113,7 +113,7 @@ hparam_dict = {
             "test_spects_path": "static/spectrograms/m_avc/test",
         },
         "gen": {
-            "best_model_path": "static/model_chk_pts/autovc/autovc.ckpt",
+            "best_model_path": "static/model_chk_pts/autovc/AVC_ckpt_epoch_600.pth",
             "cross_mel_specs_path": "static/pickle_files",
             "cross_mel_specs_file": "spkr_cross_mel_specs_file.pkl",
 
@@ -171,7 +171,7 @@ hparam_dict = {
 
     "m_wave_net": {
         "gen": {
-            "best_model_path": "static/model_chk_pts/wavenet_model/checkpoint_step001000000_ema.pth"
+            "best_model_path": "static/model_chk_pts/wavenet_model/wavenet_pretrained_step001000000_ema.pth"
         },
         "hp": {
             # DO NOT CHANGE THESE HP

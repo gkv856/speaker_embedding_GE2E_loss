@@ -31,7 +31,13 @@ def create_mel_specs_per_speaker(hp):
     # all the cross spects will be stored here
     voice_cloned_spects = []
 
+    i = 0
     for spkr_i in metadata:
+
+        i += 1
+
+        if i > 3:
+            break
 
         # speaker name depends on how the file name is structured therefore needs to split accordingly
         spkr_i_name = spkr_i[0].split("sv_")[-1].split(".")[0].split("_")[0]
@@ -45,18 +51,26 @@ def create_mel_specs_per_speaker(hp):
         # speaker utterance
         trim_len = hp.m_avc.s2.mul_32_utter_len
         spkr_i_utter = torch.tensor(utters[idx, :trim_len, :]).unsqueeze(0).to(hp.general.device)
-
+        spkr_i_utter = spkr_i_utter.float()
         # speaker embeddings
         spkr_i_embs = spkr_i[1]
         spkr_i_embs = torch.tensor(spkr_i_embs).unsqueeze(0).to(hp.general.device)
 
+        spkr_i_embs = spkr_i_embs.float()
+
         # again running the loop on metadata to produce AxB number of cross utterences
+        j = 0
         for spkr_j in metadata:
 
             # if spkr_j == spkr_i:
             #     continue
 
-            spkr_j_embs = torch.from_numpy(spkr_j[1][np.newaxis, :]).to(hp.general.device)
+            j += 1
+
+            if j > 3:
+                break
+
+            spkr_j_embs = torch.from_numpy(spkr_j[1][np.newaxis, :]).to(hp.general.device).float()
             spkr_j_name = spkr_j[0].split("/")[-1].split("_")[1]
 
             with torch.no_grad():
