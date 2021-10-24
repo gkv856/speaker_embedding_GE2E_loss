@@ -13,22 +13,34 @@ class AutoVCNetDataset(data.Dataset):
         # reading pickle file with speaker mel-spec files and embeddings
         file_path = os.path.join(hp.general.project_root, hp.m_avc.s1.speaker_embs_metadata_path)
         full_file_path = os.path.join(file_path, hp.m_avc.s1.speaker_embs_metadata_file)
-        self.lst_spr_embs = pickle.load(open(full_file_path, "rb"))
+        self.embs_md = pickle.load(open(full_file_path, "rb"))
+
+        self.lst_spkr = []
+        for k, v in self.embs_md.items():
+            self.lst_spkr.append(k)
 
         # shuffling the list
-        random.shuffle(self.lst_spr_embs)
+        random.shuffle(self.lst_spkr)
 
         # storing the length to be returned in the __len__ method
-        self.spr_len = len(self.lst_spr_embs)
+        self.spr_len = len(self.lst_spkr)
+
+        # reading pickle file with speaker mel-spec files and embeddings
+        file_path = os.path.join(hp.general.project_root, hp.m_avc.tt_data.train_spects_path)
+
+        self.dict_spr_utter_file = {}
+        for spkr in self.lst_spkr:
+            fp = os.path.join(file_path, f"sv_{spkr}.npy")
+            self.dict_spr_utter_file[spkr] = fp
 
     def __len__(self):
         return self.spr_len
 
     def __getitem__(self, idx):
-        selected_spr = self.lst_spr_embs[idx]
+        selected_spr = self.lst_spkr[idx]
 
-        spr_utter_path = selected_spr[0]
-        spr_emb = selected_spr[1]
+        spr_utter_path = self.dict_spr_utter_file[selected_spr]
+        spr_emb = self.embs_md[selected_spr]
 
         # load utterance spectrogram of selected speaker
         # shape = 320x180x80
@@ -64,7 +76,9 @@ if __name__ == '__main__':
     #
     from strings.constants import hp
 
-    train_loader = get_auto_vc_data_loader(hp, batch_size=2)
+    train_loader = get_auto_vc_data_loader(hp, batch_size=6)
 
     for i, res in enumerate(train_loader):
         print(i, res[0].shape, res[1].shape, res[2])
+
+    print(1)
