@@ -12,3 +12,4 @@ from strings.constants import hp
 create_mel_specs_per_speaker(hp)
 
 print(6)
+

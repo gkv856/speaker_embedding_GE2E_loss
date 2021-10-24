@@ -166,7 +166,6 @@ hparam_dict = {
             "save_best_weights": True,
             "min_test_loss": 2.0,
         },
-
     },
 
     "m_wave_net": {

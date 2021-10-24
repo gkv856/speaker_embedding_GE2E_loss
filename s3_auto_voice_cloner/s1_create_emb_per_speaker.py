@@ -11,7 +11,7 @@ except:
 
 def create_embbedings_per_speaker(hp):
     # getting all the numpy files in tmp list
-    utterances = []
+    spkr_embs = {}
 
     # data path saved
     train_specs_path = os.path.join(hp.general.project_root, hp.m_avc.tt_data.train_spects_path)
@@ -61,17 +61,18 @@ def create_embbedings_per_speaker(hp):
         embs_mean = np.mean(embs, axis=0)
 
         # saving speaker np file path and embs
-        utterances.append((spr, embs_mean))
+        s_id = spr.split("sv_")[-1].split(".")[0]
+        spkr_embs[s_id] = embs_mean
 
     file_path = os.path.join(hp.general.project_root, hp.m_avc.s1.speaker_embs_metadata_path)
     full_file_path = os.path.join(file_path, hp.m_avc.s1.speaker_embs_metadata_file)
     # saving utterances as a train.pkl file
     with open(full_file_path, 'wb') as handle:
-        pickle.dump(utterances, handle)
+        pickle.dump(spkr_embs, handle)
 
     print("File saved!!")
 
-    return utterances
+    return spkr_embs
 
 
 # quick test, below code will not be executed when the file is imported
@@ -84,22 +85,22 @@ if __name__ == '__main__':
     import matplotlib.pyplot as plt
 
     hp.m_ge2e.best_model_path = "static/model_chk_pts/ge2e/final_epoch_1000_L_0.0390.pth"
-    utterances = create_embbedings_per_speaker(hp)
-
-    labels = ["s1", "s2", "s3", "s4"]
+    spkr_embs = create_embbedings_per_speaker(hp)
 
     embs = []
-    for u in utterances:
-        embs.append(u[1])
+    spkr_labels = []
+    for k, v in spkr_embs.items():
+        spkr_labels.append(k)
+        embs.append(v)
 
     embeddings = torch.tensor(embs)
 
     scatters = TSNE(n_components=2, random_state=0).fit_transform(embeddings.cpu().detach().numpy())
     fig = plt.figure(figsize=(5, 5))
 
-    current_Label = labels[0]
+    current_Label = spkr_labels[0]
     current_Index = 0
-    for index, label in enumerate(labels[1:], 1):
+    for index, label in enumerate(spkr_labels[1:], 1):
         if label != current_Label:
             plt.scatter(scatters[current_Index:index, 0], scatters[current_Index:index, 1],
                         label='{}'.format(current_Label))
