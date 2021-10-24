@@ -8,7 +8,7 @@ from strings.constants import hp
 from sklearn.manifold import TSNE
 import matplotlib.pyplot as plt
 
-hp.m_ge2e.best_model_path = "static/model_chk_pts/ge2e/final_epoch_1000_L_0.0390.pth"
+# hp.m_ge2e.best_model_path = "static/model_chk_pts/ge2e/final_epoch_1000_L_0.0390.pth"
 
 utterances = create_embbedings_per_speaker(hp)
 
