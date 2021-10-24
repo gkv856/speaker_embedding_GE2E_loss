@@ -1,6 +1,5 @@
 *.xml
 *.iml
 *__init__*
-*.npy
 wavenet_model
 autovc
