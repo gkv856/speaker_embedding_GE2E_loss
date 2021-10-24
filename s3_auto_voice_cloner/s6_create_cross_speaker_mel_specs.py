@@ -41,11 +41,11 @@ class VoiceCloner:
         # loading audio utils
         self.au = AudioUtils(hp)
 
-        self.wavenet_model, self.w_hp = self.get_wave_net_model(hp)
+        self.wavenet_model, self.w_hp = self.get_wave_net_model(hp, absolute_path=self.absolute_path)
 
         self.tqdm = tqdm
 
-    def get_wave_net_model(self, pre_trained=True):
+    def get_wave_net_model(self, pre_trained=True, absolute_path=False):
         # reading wavenet model's hyper parameters
         wave_net_hp = self.hp.m_wave_net.hp
         w_hp = GetDictWithDotNotation(wave_net_hp)
@@ -70,7 +70,11 @@ class VoiceCloner:
                                                         )
 
         if pre_trained:
-            m_path = os.path.join(self.hp.general.project_root, self.hp.m_wave_net.gen.best_model_path)
+            if absolute_path:
+                m_path = self.hp.m_wave_net.gen.best_model_path
+            else:
+                m_path = os.path.join(self.hp.general.project_root, self.hp.m_wave_net.gen.best_model_path)
+
             checkpoint = torch.load(m_path, map_location=self.hp.general.device)
             wave_net_model.load_state_dict(checkpoint["state_dict"])
 
