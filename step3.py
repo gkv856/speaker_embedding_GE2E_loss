@@ -12,14 +12,11 @@ hp.m_ge2e.best_model_path = "static/model_chk_pts/ge2e/final_epoch_1000_L_0.0390
 
 utterances = create_embbedings_per_speaker(hp)
 
-
-
-# testing the embeddings
-labels = ["s1", "s2", "s3", "s4"]
-
+labels = []
 embs = []
-for u in utterances:
-    embs.append(u[1])
+for k, v in utterances.items():
+    embs.append(v)
+    labels.append(k)
 
 embeddings = torch.tensor(embs)
 

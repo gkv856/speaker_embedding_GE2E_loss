@@ -56,8 +56,15 @@ class AudioUtils:
         # norm_mel_spect is saved a slice in 3d array
         # shape norm_mel_spects = (16, 180, 80)
         if partial_slices:
-            partial_norm_mel_spects = np.array([norm_mel_spect[s] for s in mel_slices])
-            # print(f"Partial norm mel spetc = {partial_norm_mel_spects.shape}")
+            lst = []
+            for cnt, s in enumerate(mel_slices):
+                tmp = norm_mel_spect[s]
+
+                if tmp.shape[0] == self.hp.audio.partials_n_frames:
+                    # tmp = np.expand_dims(tmp, axis=0)
+                    lst.append(tmp)
+
+            partial_norm_mel_spects = np.array(lst)
             return partial_norm_mel_spects
 
         return norm_mel_spect
@@ -66,7 +73,6 @@ class AudioUtils:
         """
         Applies preprocessing operations to a waveform either on disk or in memory such that
         The waveform will be resampled to match the data hyperparameters.
-
         :param fpath_or_wav: either a filepath to an audio file (many extensions are supported, not
         just .wav), either the waveform as a numpy array of floats.
         :param source_sr: if passing an audio waveform, the sampling rate of the waveform before
@@ -108,7 +114,6 @@ class AudioUtils:
         """
         Ensures that segments without voice in the waveform remain no longer than a
         threshold determined by the VAD parameters in params.py.
-
         :param wav: the raw waveform as a numpy array of floats
         :return: the same waveform with silences trimmed away (length <= original wav length)
         """
@@ -154,10 +159,8 @@ class AudioUtils:
         obtain partial utterances of <partials_n_frames> each. Both the waveform and the
         mel spectrogram slices are returned, so as to make each partial utterance waveform
         correspond to its spectrogram.
-
         The returned ranges may be indexing further than the length of the waveform. It is
         recommended that you pad the waveform with zeros up to wav_slices[-1].stop.
-
         :param n_samples: the number of samples in the waveform
         :param rate: how many partial utterances should occur per second. Partial utterances must
         cover the span of the entire utterance, thus the rate should not be lower than the inverse

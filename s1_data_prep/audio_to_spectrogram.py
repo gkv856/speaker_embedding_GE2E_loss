@@ -119,8 +119,8 @@ class CreateSpectrogram:
 # it runs only when this file is directly executed
 if __name__ == '__main__':
     pass
-    from strings.constants import hp
-
-    hp.raw_audio.raw_audio_path = "static/raw_data/wavs"
-    cr_obj = CreateSpectrogram(hp, verbose=False)
-    cr_obj.save_spectrogram_tisv()
+    # from strings.constants import hp
+    #
+    # hp.raw_audio.raw_audio_path = "static/raw_data/wavs"
+    # cr_obj = CreateSpectrogram(hp, verbose=False)
+    # cr_obj.save_spectrogram_tisv()
