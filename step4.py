@@ -9,12 +9,12 @@ from s3_auto_voice_cloner.s5_auto_vc_train import TrainAutoVCNetwork
 from strings.constants import hp
 
 hp.m_avc.tpm.lambda_cd = 1
-hp.m_avc.tpm.num_iters = 20
-hp.m_avc.tpm.log_step = 2
+hp.m_avc.tpm.num_iters = 200
+hp.m_avc.tpm.log_step = 10
 hp.m_avc.tpm.dot_print = 1
-hp.m_avc.tpm.checkpoint_interval = 2
+hp.m_avc.tpm.checkpoint_interval = 80
 hp.m_avc.tpm.lr = 0.001
-hp.m_avc.tpm.reduce_lr_interval = 1
+hp.m_avc.tpm.reduce_lr_interval = 50
 hp.m_avc.tpm.data_batch_size = 2
 
 solver = TrainAutoVCNetwork(hp)
