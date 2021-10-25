@@ -81,6 +81,24 @@ class TrainAutoVCNetwork(object):
         """
         self.optimizer.zero_grad()
 
+    def reduce_lr(self):
+        """
+        this function reduces the learning rate use in the Adam optimizer by half until it reaches to '0.0001'
+        after that, no changes in the learning rate.
+        :return:
+        """
+        new_reduced_lr = self.lr / 2
+        if new_reduced_lr > 0.0001:
+            new_reduced_lr = self.lr / 2
+            print(f"Reducing learning rate from '{self.lr}' to '{new_reduced_lr}'")
+        else:
+            new_reduced_lr = 0.0001
+            if self.lr != 0.0001:
+                print(f"Fixing learning rate to '{new_reduced_lr}'")
+
+        self.lr = new_reduced_lr
+        self.optimizer.param_groups[0]['lr'] = self.lr
+
     # ================================================================================================================#
 
     def start_training(self):
@@ -188,9 +206,7 @@ class TrainAutoVCNetwork(object):
                 epoch_st = epoch_et
 
             if (e + 1) % self.hp.m_avc.tpm.reduce_lr_interval == 0:
-                print(f"Reducing learning rate from {self.lr} to {self.lr / 2}")
-                self.lr = self.lr / 2
-                self.optimizer.param_groups[0]['lr'] = self.lr
+                self.reduce_lr()
 
             if (e + 1) % self.hp.m_avc.tpm.checkpoint_interval == 0:
                 self.__save_model(e, verbose=True)
@@ -299,9 +315,7 @@ class TrainAutoVCNetwork(object):
                 epoch_st = epoch_et
 
             if (e + 1) % self.hp.m_avc.tpm.reduce_lr_interval == 0:
-                print(f"Reducing learning rate from {self.lr} to {self.lr / 2}")
-                self.lr = self.lr / 2
-                self.optimizer.param_groups[0]['lr'] = self.lr
+                self.reduce_lr()
 
             if (e + 1) % self.hp.m_avc.tpm.checkpoint_interval == 0:
                 self.__save_model(e, verbose=True)

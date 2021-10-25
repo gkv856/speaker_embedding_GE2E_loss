@@ -132,8 +132,8 @@ hparam_dict = {
 
         # encoder model parameters
         "m_enc": {
-            "dim_neck": 32,
-            "freq": 32,
+            "dim_neck": 16,
+            "freq": 16,
             "out_dims": 512,
             "lstm_enc_stack": 2,
         },
