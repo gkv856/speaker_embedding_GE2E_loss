@@ -15,7 +15,7 @@ hp.m_avc.tpm.dot_print = 1
 hp.m_avc.tpm.checkpoint_interval = 2
 hp.m_avc.tpm.lr = 0.001
 hp.m_avc.tpm.reduce_lr_interval = 2
-hp.m_avc.tpm.data_batch_size = 1
+hp.m_avc.tpm.data_batch_size = 2
 
 solver = TrainAutoVCNetwork(hp)
 

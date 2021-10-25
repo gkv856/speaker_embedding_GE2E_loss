@@ -110,41 +110,49 @@ class TrainAutoVCNetwork(object):
             # starting with batch_size = 1 therefore it will run 24 times.
             # each time it will pick random utterance for each 24 speakers
 
-            for utter_specs, emb, spr in self.data_loader:
-                utter_specs = utter_specs.clone().detach().cpu().requires_grad_(True).float()
-                emb = emb.clone().detach().cpu().requires_grad_(True).float()
-                # emb = torch.tensor(emb).float()
+            # Fetch data.
+            try:
+                utter_specs, emb, spr = next(data_iter)
+            except:
+                data_iter = iter(self.data_loader)
+                utter_specs, emb, spr = next(data_iter)
 
-                utter_specs = utter_specs.to(self.hp.general.device)
-                emb = emb.to(self.hp.general.device)
+            # for utter_specs, emb, spr in self.data_loader:
+            # if len(utter_specs):
+            utter_specs = utter_specs.clone().detach().cpu().requires_grad_(True).float()
+            emb = emb.clone().detach().cpu().requires_grad_(True).float()
+            # emb = torch.tensor(emb).float()
 
-                # Calculating total reconst loss
-                # here we are using the original mel-spects
-                ypred_mel_spects, ypred_mel_spects_final, ypred_spkr_content = self.auto_vc_net(utter_specs, emb, emb)
-                loss_reconst_mel_spect = F.mse_loss(utter_specs, ypred_mel_spects)
-                loss_recon_mel_spect_inc_residual = F.mse_loss(utter_specs, ypred_mel_spects_final)
+            utter_specs = utter_specs.to(self.hp.general.device)
+            emb = emb.to(self.hp.general.device)
 
-                # calculating loss for only speaker's content not the style/emb
-                # here we are using the predicted mel-spects
-                # since we are calculating 'loss_recon_mel_spect_inc_residual'
-                # it should not matter if we use 'ypred_mel_spects' or 'ypred_mel_spects_final'
-                ypred_spkr_content_only = self.auto_vc_net(ypred_mel_spects_final, emb, None)
-                loss_spkr_content = F.l1_loss(ypred_spkr_content_only, ypred_spkr_content)
+            # Calculating total reconst loss
+            # here we are using the original mel-spects
+            ypred_mel_spects, ypred_mel_spects_final, ypred_spkr_content = self.auto_vc_net(utter_specs, emb, emb)
+            loss_reconst_mel_spect = F.mse_loss(utter_specs, ypred_mel_spects)
+            loss_recon_mel_spect_inc_residual = F.mse_loss(utter_specs, ypred_mel_spects_final)
 
-                # Backward and optimize.
-                loss_total = loss_reconst_mel_spect + \
-                             loss_recon_mel_spect_inc_residual + \
-                             self.hp.m_avc.tpm.lambda_cd * loss_spkr_content
+            # calculating loss for only speaker's content not the style/emb
+            # here we are using the predicted mel-spects
+            # since we are calculating 'loss_recon_mel_spect_inc_residual'
+            # it should not matter if we use 'ypred_mel_spects' or 'ypred_mel_spects_final'
+            ypred_spkr_content_only = self.auto_vc_net(ypred_mel_spects_final, emb, None)
+            loss_spkr_content = F.l1_loss(ypred_spkr_content_only, ypred_spkr_content)
 
-                self.reset_grad()
-                loss_total.backward()
-                self.optimizer.step()
+            # Backward and optimize.
+            loss_total = loss_reconst_mel_spect + \
+                         loss_recon_mel_spect_inc_residual + \
+                         self.hp.m_avc.tpm.lambda_cd * loss_spkr_content
 
-                # collecting loss per batch
-                bl_reconst_mel_spect.append(loss_reconst_mel_spect.item())
-                bl_recon_mel_spect_inc_residual.append(loss_recon_mel_spect_inc_residual.item())
-                bl_spkr_content.append(loss_spkr_content.item())
-                # print(loss_reconst_mel_spect.item(), loss_recon_mel_spect_inc_residual.item(), loss_spkr_content.item())
+            self.reset_grad()
+            loss_total.backward()
+            self.optimizer.step()
+
+            # collecting loss per batch
+            bl_reconst_mel_spect.append(loss_reconst_mel_spect.item())
+            bl_recon_mel_spect_inc_residual.append(loss_recon_mel_spect_inc_residual.item())
+            bl_spkr_content.append(loss_spkr_content.item())
+            # print(loss_reconst_mel_spect.item(), loss_recon_mel_spect_inc_residual.item(), loss_spkr_content.item())
 
             # Logging.
             loss = {}

@@ -38,7 +38,7 @@ class AutoVCNetDataset(data.Dataset):
 
     def __getitem__(self, idx):
         selected_spr = self.lst_spkr[idx]
-
+        # print(f"selected_spr = {selected_spr}")
         spr_utter_path = self.dict_spr_utter_file[selected_spr]
         spr_emb = self.embs_md[selected_spr]
 
