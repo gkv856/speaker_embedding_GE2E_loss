@@ -17,8 +17,8 @@ cr_obj.save_spectrogram_tisv()
 # step2 of the Auto voice cloning is to: train the embedding model
 # to get a user's embedding or 256 dim vector representing user's speaking style
 
-hp.m_ge2e.training_epochs = 10
-hp.m_ge2e.checkpoint_interval = 30
+hp.m_ge2e.training_epochs = 1000
+hp.m_ge2e.checkpoint_interval = 300
 hp.m_ge2e.min_test_loss = 4
 
 

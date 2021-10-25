@@ -69,7 +69,7 @@ class AudioUtils:
 
         return norm_mel_spect
 
-    def get_audio_as_np_array(self, fpath_or_wav: Union[str, Path, np.ndarray], source_sr, cleaning=True):
+    def get_audio_as_np_array(self, fpath_or_wav: Union[str, Path], cleaning=True):
         """
         Applies preprocessing operations to a waveform either on disk or in memory such that
         The waveform will be resampled to match the data hyperparameters.
@@ -81,14 +81,12 @@ class AudioUtils:
         this argument will be ignored.
         """
         # Load the wav from disk if needed
-        if isinstance(fpath_or_wav, str) or isinstance(fpath_or_wav, Path):
-            np_arr_audio, source_sr = librosa.load(str(fpath_or_wav), sr=None)
-        else:
-            np_arr_audio = fpath_or_wav
+        np_arr_audio, source_sr = librosa.load(str(fpath_or_wav), sr=None)
 
         # Resample the wav
-        if source_sr is not None:
+        if source_sr != self.hp.audio.sampling_rate:
             np_arr_audio = librosa.resample(np_arr_audio, source_sr, self.hp.audio.sampling_rate)
+            print("Resampling the audio")
 
         if cleaning:
             # Apply the preprocessing: normalize volume and shorten long silences

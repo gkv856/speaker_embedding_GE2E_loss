@@ -47,7 +47,7 @@ hparam_dict = {
         "sampling_rate": 16000,
 
         "n_fft": 1024,  # 1024 seems to work well
-        "hop_length": 1024 // 4,  # n_fft/4 seems to work better
+        "hop_length": 1024 // 8,  # n_fft/4 seems to work better
 
         "mel_window_length": 25,  # In milliseconds
         "mel_window_step": 10,  # In milliseconds
