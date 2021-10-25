@@ -50,7 +50,8 @@ class TrainAutoVCNetwork(object):
 
         # creating chk pt name
         ckpt_model_filename = f"{name}_{e + 1}.pth"
-        ckpt_model_path = os.path.join(self.hp.general.project_root, self.hp.m_avc.tpm.checkpoint_dir, ckpt_model_filename)
+        ckpt_model_path = os.path.join(self.hp.general.project_root, self.hp.m_avc.tpm.checkpoint_dir,
+                                       ckpt_model_filename)
 
         # saving the file
         torch.save(self.auto_vc_net.state_dict(), ckpt_model_path)
@@ -84,7 +85,7 @@ class TrainAutoVCNetwork(object):
 
     def start_training(self):
         # Print logs in specified order
-        keys = ['G/loss_id', 'G/loss_id_psnt', 'G/loss_cd']
+        keys = ['Reconst', 'Reconst_Resi', 'Content_loss']
 
         # Start training.
         print('Start training...')
@@ -101,48 +102,56 @@ class TrainAutoVCNetwork(object):
                 flushed = False
 
             # creating empty loss list
-            batch_g_loss_id_psnt = []
-            batch_g_loss_id_psnt = []
-            batch_g_loss_cd = []
+            bl_reconst_mel_spect = []
+            bl_recon_mel_spect_inc_residual = []
+            bl_spkr_content = []
 
             # there are 24 speakers therefore depending upon the batch size, this loop will run x number of times
             # starting with batch_size = 1 therefore it will run 24 times.
             # each time it will pick random utterance for each 24 speakers
 
             for utter_specs, emb, spr in self.data_loader:
-
-                utter_specs = torch.tensor(utter_specs).float()
-                emb = torch.tensor(emb).float()
+                utter_specs = utter_specs.clone().detach().cpu().requires_grad_(True).float()
+                emb = emb.clone().detach().cpu().requires_grad_(True).float()
+                # emb = torch.tensor(emb).float()
 
                 utter_specs = utter_specs.to(self.hp.general.device)
                 emb = emb.to(self.hp.general.device)
 
-                # Identity mapping loss
-                x_identic, x_identic_psnt, code_real = self.auto_vc_net(utter_specs, emb, emb)
-                g_loss_id = F.mse_loss(utter_specs, x_identic)
-                g_loss_id_psnt = F.mse_loss(utter_specs, x_identic_psnt)
+                # Calculating total reconst loss
+                # here we are using the original mel-spects
+                ypred_mel_spects, ypred_mel_spects_final, ypred_spkr_content = self.auto_vc_net(utter_specs, emb, emb)
+                loss_reconst_mel_spect = F.mse_loss(utter_specs, ypred_mel_spects)
+                loss_recon_mel_spect_inc_residual = F.mse_loss(utter_specs, ypred_mel_spects_final)
 
-                # Code semantic loss.
-                code_reconst = self.auto_vc_net(x_identic_psnt, emb, None)
-                g_loss_cd = F.l1_loss(code_real, code_reconst)
+                # calculating loss for only speaker's content not the style/emb
+                # here we are using the predicted mel-spects
+                # since we are calculating 'loss_recon_mel_spect_inc_residual'
+                # it should not matter if we use 'ypred_mel_spects' or 'ypred_mel_spects_final'
+                ypred_spkr_content_only = self.auto_vc_net(ypred_mel_spects_final, emb, None)
+                loss_spkr_content = F.l1_loss(ypred_spkr_content_only, ypred_spkr_content)
 
                 # Backward and optimize.
-                g_loss = g_loss_id + g_loss_id_psnt + self.hp.m_avc.tpm.lambda_cd * g_loss_cd
+                loss_total = loss_reconst_mel_spect + \
+                             loss_recon_mel_spect_inc_residual + \
+                             self.hp.m_avc.tpm.lambda_cd * loss_spkr_content
+
                 self.reset_grad()
-                g_loss.backward()
+                loss_total.backward()
                 self.optimizer.step()
 
                 # collecting loss per batch
-                batch_g_loss_id_psnt.append(g_loss_id_psnt.item())
-                batch_g_loss_id_psnt.append(g_loss_id_psnt.item())
-                batch_g_loss_cd.append(g_loss_cd.item())
+                bl_reconst_mel_spect.append(loss_reconst_mel_spect.item())
+                bl_recon_mel_spect_inc_residual.append(loss_recon_mel_spect_inc_residual.item())
+                bl_spkr_content.append(loss_spkr_content.item())
+                # print(loss_reconst_mel_spect.item(), loss_recon_mel_spect_inc_residual.item(), loss_spkr_content.item())
 
             # Logging.
             loss = {}
-            loss['G/loss_id'] = np.mean(batch_g_loss_id_psnt)
-            loss['G/loss_id_psnt'] = np.mean(batch_g_loss_id_psnt)
-            loss['G/loss_cd'] = np.mean(batch_g_loss_cd)
-            curr_batch_loss = (loss['G/loss_id'], loss['G/loss_id_psnt'], loss['G/loss_cd'])
+            loss['Reconst'] = np.mean(bl_reconst_mel_spect)
+            loss['Reconst_Resi'] = np.mean(bl_recon_mel_spect_inc_residual)
+            loss['Content_loss'] = np.mean(bl_spkr_content)
+            curr_batch_loss = (loss['Reconst'], loss['Reconst_Resi'], loss['Content_loss'])
             self.train_losses.append(curr_batch_loss)
 
             if (e + 1) % self.hp.m_avc.tpm.dot_print == 0:

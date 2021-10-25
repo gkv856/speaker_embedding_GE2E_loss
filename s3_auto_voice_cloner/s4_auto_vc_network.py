@@ -32,35 +32,43 @@ class AutoVCNetwork(nn.Module):
         # len(codes), codes[0].shape = (8, torch.Size([2, 32]))
         # this is up1 and up2 in figure 3(c)
 
-        codes = self.encoder(mel_specs, original_emb)
+        # encoder's job is take mel spec and give out data that is pure content, no speaker related info
+        spkr_content_wo_embs = self.encoder(mel_specs, original_emb)
         if target_emb is None:
-            return torch.cat(codes, dim=-1)
+            return torch.cat(spkr_content_wo_embs, dim=-1)
 
         tmp = []
-        for code in codes:
-            tmp.append(code.unsqueeze(1).expand(-1, int(mel_specs.shape[1] / len(codes)), -1))
-        code_exp = torch.cat(tmp, dim=1)
+        for code in spkr_content_wo_embs:
+            tmp.append(code.unsqueeze(1).expand(-1, int(mel_specs.shape[1] / len(spkr_content_wo_embs)), -1))
+        spkr_content_wo_embs_exp = torch.cat(tmp, dim=1)
 
         # concatenating the up1, up2 and original embedding (target_emb)
         # in the fig 3(c) this is equivalent to concatenate layer of 320 length
-        encoder_outputs = torch.cat((code_exp, target_emb.unsqueeze(1).expand(-1, mel_specs.shape[1], -1)), dim=-1)
+        # target embs is a speaker's style of spkeaking. For training, to and from are same but during conversion these
+        # will be different
+        tgt_embs = target_emb.unsqueeze(1).expand(-1, mel_specs.shape[1], -1)
+
+        # joining speaker content and speaker's speaking style (speaker emb)
+        encoder_outputs = torch.cat((spkr_content_wo_embs_exp, tgt_embs), dim=-1)
 
         # mel_outputs is the output of '1×1 Conv' layer in fig 3(c)
         # mel_outputs =  torch.Size([2, 128, 80])
-        mel_outputs = self.decoder(encoder_outputs)
+        ypred_mel_spects = self.decoder(encoder_outputs)
 
         # mel_outputs_postnet is the output of '5×1 ConvNorm' without addition
         # mel_outputs_postnet.shape = torch.Size([2, 80, 128])
-        mel_outputs_postnet = self.postnet(mel_outputs.transpose(2, 1))
+        residual_mel_spect_pn = self.postnet(ypred_mel_spects.transpose(2, 1))
 
         # this is the final re-created mel_specs output
         # ideally this should be very close to the starting mel_specs.
         # this will be used to calculate the loss
-        mel_outputs_postnet = mel_outputs + mel_outputs_postnet.transpose(2, 1)
+        ypred_mel_spects_final = ypred_mel_spects + residual_mel_spect_pn.transpose(2, 1)
 
         # finally return all the outputs to calculate losses
         # (torch.Size([2, 128, 80]), torch.Size([2, 128, 80]), torch.Size([2, 256]))
-        return mel_outputs, mel_outputs_postnet, torch.cat(codes, dim=-1)
+        ypred_spkr_content = torch.cat(spkr_content_wo_embs, dim=-1)
+
+        return ypred_mel_spects, ypred_mel_spects_final, ypred_spkr_content
 
 
 def get_pre_trained_auto_vc_network(hp, absolute_path=False):
