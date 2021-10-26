@@ -160,10 +160,10 @@ class TrainAutoVCNetwork(object):
             self.flushed = True
             self.epoch_st = self.epoch_et
 
-        if (e + 1) % self.hp.m_avc.tpm.reduce_lr_interval == 0:
+        if e % self.hp.m_avc.tpm.reduce_lr_interval == 0:
             self.reduce_lr()
 
-        if (e + 1) % self.hp.m_avc.tpm.checkpoint_interval == 0:
+        if e % self.hp.m_avc.tpm.checkpoint_interval == 0:
             self.__save_model(e, verbose=True)
 
     def avc_forward_backprop_step(self, utter_specs, emb):
