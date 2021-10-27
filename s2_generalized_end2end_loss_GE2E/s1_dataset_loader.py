@@ -95,16 +95,15 @@ def get_train_test_data_loader(hp):
     train_loader = data.DataLoader(train_dataset,
                                    batch_size=hp.m_ge2e.training_N,  # number of speakers
                                    shuffle=True,
-                                   drop_last=True)
-
-    # TODO implement num_workers
-    # num_workers=hp.m_ge2e.training_num_workers,
+                                   drop_last=True,
+                                   prefetch_factor=2)
 
     test_dataset = EmbeddingModelTTDataset(hp=hp, training=False, data_path=test_specs_path)
     test_loader = data.DataLoader(test_dataset,
                                   batch_size=hp.m_ge2e.test_N,  # number of speakers
                                   shuffle=False,
-                                  drop_last=True)
+                                  drop_last=True,
+                                  prefetch_factor=2)
 
     return train_loader, test_loader
 

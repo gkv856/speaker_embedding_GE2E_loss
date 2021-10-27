@@ -113,7 +113,9 @@ hparam_dict = {
             "test_spects_path": "static/spectrograms/m_avc/test",
         },
         "gen": {
+            "load_pre_trained_model": True,
             "best_model_path": "static/model_chk_pts/autovc/AVC_ckpt_epoch_600.pth",
+            "st_epoch_cnt": 600, # equal to the pre-trained model epoch count
             "cross_mel_specs_path": "static/pickle_files",
             "cross_mel_specs_file": "spkr_cross_mel_specs_file.pkl",
 
@@ -153,6 +155,7 @@ hparam_dict = {
 
         # AutoVC model training parameters
         "tpm": {
+
             "lambda_cd": 1,
             "num_iters": 10000,
             "log_step": 100,

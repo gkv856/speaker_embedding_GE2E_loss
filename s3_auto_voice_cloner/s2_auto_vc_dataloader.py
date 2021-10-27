@@ -65,7 +65,9 @@ def get_auto_vc_data_loader(hp, batch_size=1):
     train_loader = data.DataLoader(train_dataset,
                                    batch_size=batch_size,  # number of speakers
                                    shuffle=True,
-                                   drop_last=True)
+                                   drop_last=True,
+                                   # num_workers=2,
+                                   prefetch_factor=2)
     return train_loader
 
 

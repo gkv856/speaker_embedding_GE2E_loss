@@ -7,7 +7,7 @@ import torch.nn.functional as F
 
 try:
     from s3_auto_voice_cloner.s2_auto_vc_dataloader import get_auto_vc_data_loader
-    from s3_auto_voice_cloner.s4_auto_vc_network import AutoVCNetwork
+    from s3_auto_voice_cloner.s4_auto_vc_network import AutoVCNetwork, get_pre_trained_auto_vc_network
 except:
     from AVC.s3_auto_voice_cloner.s2_auto_vc_dataloader import get_auto_vc_data_loader
     from AVC.s3_auto_voice_cloner.s4_auto_vc_network import AutoVCNetwork
@@ -15,11 +15,17 @@ except:
 
 class TrainAutoVCNetwork(object):
 
-    def __init__(self, hp):
+    def __init__(self, hp, absolute_path=False):
         """Initialize configurations."""
 
         # to be used later
         self.hp = hp
+        self.absolute_path = absolute_path
+
+        # setting the epoch start and end, this is helpful while saving the model with epoch count
+        # we will update the st and end epoch in the __create_model function, depending upon the loaded model
+        self.st_epoch = self.hp.m_avc.gen.st_epoch_cnt
+        self.ed_epoch = self.hp.m_avc.tpm.num_iters + self.st_epoch
 
         # create data loader.
         self.data_loader = get_auto_vc_data_loader(hp, batch_size=hp.m_avc.tpm.data_batch_size)
@@ -28,10 +34,12 @@ class TrainAutoVCNetwork(object):
         self.lr = hp.m_avc.tpm.lr
 
         # Build the model and tensorboard.
-        self.__create_model()
-
         # setting the model to training mode
+        self.__create_model()
         self.auto_vc_net = self.auto_vc_net.train()
+
+        # create optimizer.
+        self.__create_optimizer()
 
         # creating the folder to save checkpoints
         chk_path = os.path.join(hp.general.project_root, hp.m_avc.tpm.checkpoint_dir)
@@ -75,7 +83,7 @@ class TrainAutoVCNetwork(object):
         self.auto_vc_net.eval().cpu()
 
         # creating chk pt name
-        ckpt_model_filename = f"{name}_{e + 1}.pth"
+        ckpt_model_filename = f"{name}_{e}.pth"
         ckpt_model_path = os.path.join(self.hp.general.project_root, self.hp.m_avc.tpm.checkpoint_dir,
                                        ckpt_model_filename)
 
@@ -95,8 +103,25 @@ class TrainAutoVCNetwork(object):
 
         # creating an instance of the AutoVC network
         # sending the model to the GPU (if available)
-        self.auto_vc_net = AutoVCNetwork(self.hp).to(self.hp.general.device)
+        try:
+            if self.hp.m_avc.gen.load_pre_trained_model:
+                self.auto_vc_net = get_pre_trained_auto_vc_network(self.hp, absolute_path=self.absolute_path)
+                self.auto_vc_net = self.auto_vc_net.to(self.hp.general.device)
+                print("Loaded a pre-trained model for training")
+            else:
 
+                self.auto_vc_net = AutoVCNetwork(self.hp).to(self.hp.general.device)
+                self.st_epoch = 0
+                self.ed_epoch = self.hp.m_avc.tpm.num_iters + self.st_epoch
+                print("Loaded a fresh model for training")
+
+        except:
+            self.auto_vc_net = AutoVCNetwork(self.hp).to(self.hp.general.device)
+            self.st_epoch = 0
+            self.ed_epoch = self.hp.m_avc.tpm.num_iters + self.st_epoch
+            print("Failed to load a pre-trained model, loaded a fresh model")
+
+    def __create_optimizer(self):
         # creating an adam optimizer
         self.optimizer = torch.optim.Adam(self.auto_vc_net.parameters(),
                                           lr=self.lr,
@@ -146,13 +171,13 @@ class TrainAutoVCNetwork(object):
         if e % self.hp.m_avc.tpm.log_step == 0:
 
             # calculating epoch running time
-            if e == self.hp.m_avc.tpm.log_step:
+            if e == self.hp.m_avc.tpm.log_step + self.st_epoch:
                 self.epoch_st = self.training_st
 
             self.epoch_et = time.time()
             hours, rem = divmod(self.epoch_et - self.epoch_st, 3600)
             minutes, seconds = divmod(rem, 60)
-            time_msg = ", {:0>2}:{:0>2}:{:0.0f}".format(int(hours), int(minutes), seconds)
+            time_msg = " {:0>2}:{:0>2}:{:0.0f}".format(int(hours), int(minutes), seconds)
 
             msg = ""
             # collecting the loss message
@@ -223,10 +248,10 @@ class TrainAutoVCNetwork(object):
         # setting the training time
         self.training_st = time.time()
 
-        for e in range(self.hp.m_avc.tpm.num_iters):
+        for e in range(self.st_epoch, self.ed_epoch):
 
             if self.flushed:
-                print(f"Epoch:[{e + self.hp.m_avc.tpm.log_step}/{self.hp.m_avc.tpm.num_iters}] ", end="")
+                print(f"Epoch:[{e + self.hp.m_avc.tpm.log_step}/{self.ed_epoch}] ", end="")
                 self.flushed = False
 
             # creating empty loss list
@@ -283,7 +308,7 @@ class TrainAutoVCNetwork(object):
             self.print_training_info(e + 1)
 
         # save final model
-        self.__save_model(e, name="final", verbose=True)
+        self.__save_model(e + 1, name="final", verbose=True)
 
         return self.auto_vc_net, self.train_losses
 
