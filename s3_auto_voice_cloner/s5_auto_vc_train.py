@@ -227,7 +227,8 @@ class TrainAutoVCNetwork(object):
 
         # Backward and optimize.
         # loss_total = L_recon + L_recon0 + self.hp.m_avc.tpm.lambda_cd * L_content
-        loss_total = L_recon + L_recon0 + self.hp.m_avc.tpm.lambda_cd * L_content
+        # loss_total = L_recon + L_recon0 + self.hp.m_avc.tpm.lambda_cd * L_content
+        loss_total = L_recon0 + self.hp.m_avc.tpm.lambda_cd * L_content
 
         self.reset_grad()
         loss_total.backward()
