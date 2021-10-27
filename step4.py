@@ -20,9 +20,6 @@ hp.m_avc.tpm.data_batch_size = 2
 solver = TrainAutoVCNetwork(hp)
 
 # start the training
-# auto_vc_model, lst_loss_tuple = solver.start_training(batched=False)
-
-print("\n\n")
 auto_vc_model, lst_loss_tuple = solver.start_training(batched=True)
 
 

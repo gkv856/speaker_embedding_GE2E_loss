@@ -98,7 +98,12 @@ class TrainAutoVCNetwork(object):
         self.auto_vc_net = AutoVCNetwork(self.hp).to(self.hp.general.device)
 
         # creating an adam optimizer
-        self.optimizer = torch.optim.Adam(self.auto_vc_net.parameters(), self.lr)
+        self.optimizer = torch.optim.Adam(self.auto_vc_net.parameters(),
+                                          lr=self.lr,
+                                          betas=(0.9, 0.999),
+                                          eps=1e-7,
+                                          weight_decay=0
+                                          )
 
     def reset_grad(self):
         """
@@ -197,6 +202,10 @@ class TrainAutoVCNetwork(object):
 
         self.reset_grad()
         loss_total.backward()
+        torch.nn.utils.clip_grad_norm_(
+            parameters=self.auto_vc_net.parameters(),
+            max_norm=10.0
+        )
         self.optimizer.step()
 
         return L_recon0.item(), L_content.item()
