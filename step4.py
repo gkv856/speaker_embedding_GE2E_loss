@@ -19,7 +19,7 @@ hp.m_avc.tpm.data_batch_size = 2
 hp.m_avc.tpm.norm_batch = False
 
 # resume training
-hp.m_avc.gen.load_pre_trained_model = True
+hp.m_avc.gen.load_pre_trained_model = False
 hp.m_avc.gen.best_model_path = "static/model_chk_pts/autovc/final_200.pth"
 hp.m_avc.gen.st_epoch_cnt = 200
 

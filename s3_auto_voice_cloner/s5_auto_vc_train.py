@@ -228,10 +228,10 @@ class TrainAutoVCNetwork(object):
 
         self.reset_grad()
         loss_total.backward()
-        torch.nn.utils.clip_grad_norm_(
-            parameters=self.auto_vc_net.parameters(),
-            max_norm=10.0
-        )
+        # torch.nn.utils.clip_grad_norm_(
+        #     parameters=self.auto_vc_net.parameters(),
+        #     max_norm=10.0
+        # )
         self.optimizer.step()
 
         return loss_total.item(), L_recon0.item(), L_content.item()
