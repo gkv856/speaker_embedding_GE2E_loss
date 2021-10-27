@@ -23,13 +23,9 @@ hp.m_avc.gen.load_pre_trained_model = False
 hp.m_avc.gen.best_model_path = "static/model_chk_pts/autovc/final_200.pth"
 hp.m_avc.gen.st_epoch_cnt = 200
 
-
-
 solver = TrainAutoVCNetwork(hp, absolute_path=False)
 
 # start the training
 auto_vc_model, lst_loss_tuple = solver.start_training(batched=True)
 
-
 print(5)
-

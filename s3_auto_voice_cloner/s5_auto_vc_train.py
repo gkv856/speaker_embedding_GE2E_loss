@@ -215,9 +215,6 @@ class TrainAutoVCNetwork(object):
         L_recon = F.mse_loss(utter_specs, ypred_mel_spects)
         L_recon0 = F.mse_loss(utter_specs, ypred_mel_spects_final)
 
-        # L_recon = F.l1_loss(utter_specs, ypred_mel_spects)
-        # L_recon0 = F.l1_loss(utter_specs, ypred_mel_spects_final)
-
         # calculating loss for only speaker's content not the style/emb
         # here we are using the predicted mel-spects
         # since we are calculating 'loss_recon_mel_spect_inc_residual'
@@ -226,9 +223,7 @@ class TrainAutoVCNetwork(object):
         L_content = F.l1_loss(ypred_spkr_content_only, ypred_spkr_content)
 
         # Backward and optimize.
-        # loss_total = L_recon + L_recon0 + self.hp.m_avc.tpm.lambda_cd * L_content
-        # loss_total = L_recon + L_recon0 + self.hp.m_avc.tpm.lambda_cd * L_content
-        loss_total = L_recon0 + self.hp.m_avc.tpm.lambda_cd * L_content
+        loss_total = L_recon + L_recon0 + self.hp.m_avc.tpm.lambda_cd * L_content
 
         self.reset_grad()
         loss_total.backward()
