@@ -10,7 +10,7 @@ try:
     from s3_auto_voice_cloner.s4_auto_vc_network import AutoVCNetwork, get_pre_trained_auto_vc_network
 except:
     from AVC.s3_auto_voice_cloner.s2_auto_vc_dataloader import get_auto_vc_data_loader
-    from AVC.s3_auto_voice_cloner.s4_auto_vc_network import AutoVCNetwork
+    from AVC.s3_auto_voice_cloner.s4_auto_vc_network import AutoVCNetwork, get_pre_trained_auto_vc_network
 
 
 class TrainAutoVCNetwork(object):
