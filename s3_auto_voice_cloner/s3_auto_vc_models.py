@@ -1,6 +1,6 @@
+import numpy as np
 import torch
 import torch.nn as nn
-import numpy as np
 import torch.nn.functional as F
 
 
@@ -22,9 +22,10 @@ class LinearNorm(torch.nn.Module):
 
 class ConvNorm(torch.nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size=1, stride=1, padding=None,
-                 dilation=1, bias=True, w_init_gain='linear'):
+                 dilation=1, bias=True, w_init_gain='linear', norm_batch=True):
         super(ConvNorm, self).__init__()
 
+        self.norm_batch = norm_batch
         if padding is None:
             assert (kernel_size % 2 == 1)
             padding = int(dilation * (kernel_size - 1) / 2)
@@ -46,8 +47,10 @@ class ConvNorm(torch.nn.Module):
 
     def forward(self, signal):
         conv_signal = self.conv(signal)
-        bn_signal = self.bn(conv_signal)
-        return bn_signal
+        if self.norm_batch:
+            conv_signal = self.bn(conv_signal)
+
+        return conv_signal
 
 
 class EncoderModel(nn.Module):
@@ -81,7 +84,8 @@ class EncoderModel(nn.Module):
                                   stride=1,
                                   padding=2,
                                   dilation=1,
-                                  w_init_gain='relu')
+                                  w_init_gain='relu',
+                                  norm_batch=hp.m_avc.tpm.norm_batch)
 
             convolutions.append(conv_layer)
 
@@ -161,7 +165,8 @@ class DecoderModel(nn.Module):
                                   stride=1,
                                   padding=2,
                                   dilation=1,
-                                  w_init_gain='relu')
+                                  w_init_gain='relu',
+                                  norm_batch=hp.m_avc.tpm.norm_batch)
 
             convolutions.append(conv_layer)
 
@@ -224,7 +229,8 @@ class Postnet(nn.Module):
                                           stride=1,
                                           padding=2,
                                           dilation=1,
-                                          w_init_gain='tanh')
+                                          w_init_gain='tanh',
+                                          norm_batch=hp.m_avc.tpm.norm_batch)
                                  )
 
         # adding 4 more conv batch norm layers
@@ -235,7 +241,8 @@ class Postnet(nn.Module):
                                               stride=1,
                                               padding=2,
                                               dilation=1,
-                                              w_init_gain='tanh')
+                                              w_init_gain='tanh',
+                                              norm_batch=hp.m_avc.tpm.norm_batch)
                                      )
 
         # adding the final output conv layer
@@ -245,7 +252,8 @@ class Postnet(nn.Module):
                                           stride=1,
                                           padding=2,
                                           dilation=1,
-                                          w_init_gain='linear')
+                                          w_init_gain='linear',
+                                          norm_batch=hp.m_avc.tpm.norm_batch)
                                  )
 
     def forward(self, x):
@@ -308,4 +316,3 @@ if __name__ == '__main__':
     assert res.shape[-1] == hp.m_avc.s2.mul_32_utter_len
 
     print("Success, all test passed!!")
-

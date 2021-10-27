@@ -16,11 +16,13 @@ hp.m_avc.tpm.checkpoint_interval = 2
 hp.m_avc.tpm.lr = 0.001
 hp.m_avc.tpm.reduce_lr_interval = 5
 hp.m_avc.tpm.data_batch_size = 2
+hp.m_avc.tpm.norm_batch = False
 
 # resume training
 hp.m_avc.gen.load_pre_trained_model = True
 hp.m_avc.gen.best_model_path = "static/model_chk_pts/autovc/final_200.pth"
 hp.m_avc.gen.st_epoch_cnt = 200
+
 
 
 solver = TrainAutoVCNetwork(hp, absolute_path=False)

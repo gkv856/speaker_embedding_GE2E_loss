@@ -168,6 +168,7 @@ hparam_dict = {
             "best_model_path": "static/model_chk_pts/autovc/m_best_50_L_0.0001.pth",
             "save_best_weights": True,
             "min_test_loss": 2.0,
+            "norm_batch": True,
         },
     },
 
