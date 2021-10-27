@@ -115,10 +115,11 @@ class TrainAutoVCNetwork(object):
                 self.ed_epoch = self.hp.m_avc.tpm.num_iters + self.st_epoch
                 print("Loaded a fresh model for training")
 
-        except:
+        except Exception as e:
             self.auto_vc_net = AutoVCNetwork(self.hp).to(self.hp.general.device)
             self.st_epoch = 0
             self.ed_epoch = self.hp.m_avc.tpm.num_iters + self.st_epoch
+            print(e)
             print("Failed to load a pre-trained model, loaded a fresh model")
 
     def __create_optimizer(self):

@@ -1,8 +1,7 @@
-import tor
+class Config:
+    m_avc_gen_best_model = 1
+    i2 = 2
 
 
-class AudioUtils:
-    def __init__(self, hp):
-        self.hp = hp
-
-        tfm_to_spect = ta.transforms.Spectrogram(n_fft=800)
+c = Config()
+c.m_avc_gen_best_model = 2
