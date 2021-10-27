@@ -212,8 +212,8 @@ class TrainAutoVCNetwork(object):
         # Calculating total reconst loss
         # here we are using the original mel-spects
         ypred_mel_spects, ypred_mel_spects_final, ypred_spkr_content = self.auto_vc_net(utter_specs, emb, emb)
-        L_recon = F.mse_loss(utter_specs, ypred_mel_spects)
-        L_recon0 = F.mse_loss(utter_specs, ypred_mel_spects_final)
+        L_recon = F.mse_loss(utter_specs, ypred_mel_spects, reduction="sum")
+        L_recon0 = F.mse_loss(utter_specs, ypred_mel_spects_final, reduction="sum")
 
         # calculating loss for only speaker's content not the style/emb
         # here we are using the predicted mel-spects
