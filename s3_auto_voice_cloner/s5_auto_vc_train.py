@@ -268,8 +268,8 @@ class TrainAutoVCNetwork(object):
                 for utter_specs, emb, spr in self.data_loader:
                     # for utter_specs, emb, spr in self.data_loader:
                     # if len(utter_specs):
-                    utter_specs = utter_specs.clone().detach().cpu().requires_grad_(True).float()
-                    emb = emb.clone().detach().cpu().requires_grad_(True).float()
+                    # utter_specs = utter_specs.clone().detach().cpu().requires_grad_(True).float()
+                    # emb = emb.clone().detach().cpu().requires_grad_(True).float()
 
                     # call model training step
                     l_recon, l_recon0, l_content = self.avc_forward_backprop_step(utter_specs, emb)
@@ -290,8 +290,8 @@ class TrainAutoVCNetwork(object):
 
                 # for utter_specs, emb, spr in self.data_loader:
                 # if len(utter_specs):
-                utter_specs = utter_specs.clone().detach().cpu().requires_grad_(True).float()
-                emb = emb.clone().detach().cpu().requires_grad_(True).float()
+                # utter_specs = utter_specs.clone().detach().cpu().requires_grad_(True).float()
+                # emb = emb.clone().detach().cpu().requires_grad_(True).float()
 
                 # call model training step
                 l_recon, l_recon0, l_content = self.avc_forward_backprop_step(utter_specs, emb)

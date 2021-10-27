@@ -1,4 +1,5 @@
 import numpy as np
+import torch
 import torch.utils.data as data
 import pickle
 import os
@@ -56,6 +57,9 @@ class AutoVCNetDataset(data.Dataset):
         # cropping the utterance length to 'self.hp.m_avc.s2.mul_32_utter_len' (128)
         left = np.random.randint(utter_used.shape[0] - self.hp.m_avc.s2.mul_32_utter_len)
         utter_used = utter_used[left:left + self.hp.m_avc.s2.mul_32_utter_len, :]
+
+        utter_used = torch.Tensor(utter_used).float()
+        spr_emb = torch.Tensor(spr_emb).float()
 
         return utter_used, spr_emb, spr_utter_path
 
