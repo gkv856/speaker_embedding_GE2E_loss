@@ -186,7 +186,7 @@ class TrainAutoVCNetwork(object):
         # Calculating total reconst loss
         # here we are using the original mel-spects
         ypred_mel_spects, ypred_mel_spects_final, ypred_spkr_content = self.auto_vc_net(utter_specs, emb, emb)
-        # L_recon = F.mse_loss(utter_specs, ypred_mel_spects)
+        L_recon = F.mse_loss(utter_specs, ypred_mel_spects)
         L_recon0 = F.mse_loss(utter_specs, ypred_mel_spects_final)
 
         # calculating loss for only speaker's content not the style/emb
@@ -198,7 +198,7 @@ class TrainAutoVCNetwork(object):
 
         # Backward and optimize.
         # loss_total = L_recon + L_recon0 + self.hp.m_avc.tpm.lambda_cd * L_content
-        loss_total = L_recon0 + self.hp.m_avc.tpm.lambda_cd * L_content
+        loss_total = L_recon + L_recon0 + self.hp.m_avc.tpm.lambda_cd * L_content
 
         self.reset_grad()
         loss_total.backward()
@@ -208,7 +208,7 @@ class TrainAutoVCNetwork(object):
         )
         self.optimizer.step()
 
-        return L_recon0.item(), L_content.item()
+        return loss_total.item(), L_recon0.item(), L_content.item()
 
     # ================================================================================================================#
 
@@ -246,10 +246,10 @@ class TrainAutoVCNetwork(object):
                     emb = emb.clone().detach().cpu().requires_grad_(True).float()
 
                     # call model training step
-                    l_recon0, l_content = self.avc_forward_backprop_step(utter_specs, emb)
+                    l_recon, l_recon0, l_content = self.avc_forward_backprop_step(utter_specs, emb)
 
                     # collecting loss per batch
-                    self.bl_l_recon.append(0.0)
+                    self.bl_l_recon.append(l_recon)
                     self.bl_l_recon0.append(l_recon0)
                     self.bl_l_content.append(l_content)
 
@@ -268,10 +268,10 @@ class TrainAutoVCNetwork(object):
                 emb = emb.clone().detach().cpu().requires_grad_(True).float()
 
                 # call model training step
-                l_recon0, l_content = self.avc_forward_backprop_step(utter_specs, emb)
+                l_recon, l_recon0, l_content = self.avc_forward_backprop_step(utter_specs, emb)
 
                 # collecting loss per batch
-                self.bl_l_recon.append(0.0)
+                self.bl_l_recon.append(l_recon)
                 self.bl_l_recon0.append(l_recon0)
                 self.bl_l_content.append(l_content)
 
