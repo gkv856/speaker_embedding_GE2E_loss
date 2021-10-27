@@ -11,8 +11,8 @@ class LinearNorm(torch.nn.Module):
         self.linear_layer = torch.nn.Linear(in_dim, out_dim, bias=bias)
 
         # initializing the conv weights as xavier uniform distribution
-        # gain = torch.nn.init.calculate_gain(w_init_gain)
-        # torch.nn.init.xavier_uniform_(self.linear_layer.weight, gain=gain)
+        gain = torch.nn.init.calculate_gain(w_init_gain)
+        torch.nn.init.xavier_uniform_(self.linear_layer.weight, gain=gain)
 
     def forward(self, x):
         return self.linear_layer(x)
@@ -41,8 +41,8 @@ class ConvNorm(torch.nn.Module):
         self.bn = nn.BatchNorm1d(out_channels)
 
         # initializing the conv weights as xavier uniform distribution
-        # gain = torch.nn.init.calculate_gain(w_init_gain)
-        # torch.nn.init.xavier_uniform_(self.conv.weight, gain=gain)
+        gain = torch.nn.init.calculate_gain(w_init_gain)
+        torch.nn.init.xavier_uniform_(self.conv.weight, gain=gain)
 
     def forward(self, signal):
         conv_signal = self.conv(signal)
