@@ -77,7 +77,7 @@ class EncoderModel(nn.Module):
             # (bkz we will concat embeds and mels specs)
             # for subsequent layers it will = out_dims
             # in_dims = hp.audio.mel_n_channels + hp.m_ge2e.model_embedding_size if i == 0 else hp.m_avc.m_enc.out_dims
-            in_dims = hp.audio.mel_n_channels if i == 0 else hp.m_avc.m_enc.out_dims
+            in_dims = hp.audio.mel_n_channels + hp.m_ge2e.model_embedding_size if i == 0 else hp.m_avc.m_enc.out_dims
 
             conv_layer = ConvNorm(in_dims,
                                   hp.m_avc.m_enc.out_dims,
@@ -112,9 +112,9 @@ class EncoderModel(nn.Module):
 
         # to concatenate mel_spec and embedding, we need to make them of same dimensions
         # unsqueeze will increase a dimension and expand will copy the same values to each dimensions
-        # c_org = emb_original.unsqueeze(-1).expand(-1, -1, x.size(-1))
-        #
-        # x = torch.cat((x, c_org), dim=1)
+        c_org = emb_original.unsqueeze(-1).expand(-1, -1, x.size(-1))
+
+        x = torch.cat((x, c_org), dim=1)
 
         for conv in self.convolutions:
             x = F.relu(conv(x))
