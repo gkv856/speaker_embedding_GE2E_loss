@@ -1,17 +1,15 @@
 import struct
 from pathlib import Path
-from typing import Optional, Union
+from typing import Union
 
 import librosa
 import numpy as np
 import webrtcvad
-from scipy.ndimage.morphology import binary_dilation
-
-from numpy.random import RandomState
-
-from scipy import signal
-from scipy.signal import get_window
 from librosa.filters import mel
+from numpy.random import RandomState
+from scipy import signal
+from scipy.ndimage.morphology import binary_dilation
+from scipy.signal import get_window
 
 int16_max = (2 ** 15) - 1
 
@@ -28,12 +26,10 @@ class AudioUtils:
                              n_mels=self.hp.audio.mel_n_channels).T
         self.min_level = np.exp(-100 / 20 * np.log(10))
 
-    def get_mel_spects_from_audio(self, fpath_or_wav: Union[str, Path, np.ndarray],
-                                  source_sr: Optional[int] = None,
-                                  partial_slices=True):
+    def get_mel_spects_from_audio(self, fpath_or_wav: Union[str, Path], partial_slices=True, clean_data=True):
 
         # getting audio as a np array
-        np_audio = self.get_audio_as_np_array(fpath_or_wav, source_sr)
+        np_audio = self.get_audio_as_np_array(fpath_or_wav, clean_data)
 
         if partial_slices:
             wav_slices, mel_slices = self.compute_partial_slices(len(np_audio))

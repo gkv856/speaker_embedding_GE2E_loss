@@ -35,8 +35,8 @@ class VoiceCloner:
         # loading a pre-trained Auto Voice Clone model
         self.avc_model = get_pre_trained_auto_vc_network(hp, absolute_path=self.absolute_path)
 
-        # loading audio utils
-        self.au = AudioUtils(hp)
+        # setting model to eval mode
+        self.avc_model = self.avc_model.eval()
 
         # loading audio utils
         self.au = AudioUtils(hp)
