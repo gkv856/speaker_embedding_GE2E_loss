@@ -33,9 +33,21 @@
 ### Technically there are 7 steps to use this repo
 **Steps will be detailed here very soon**
 
-**Step1**
+**Step1** Create spectrogram and train the Speaker Embedding model. Use the code from ```step1_train_embedding_model.py```
 
-**Step2**
+**Results Step 1 (Embedding model using GE2E loss)**
+- With 4 Speakers 
+- With 6 Speakers
+- With 10 Speakers
+
+*With this we are confident that our embedding model is working as expected*
+
+![Speaker classification for 4 speakers](static/outputs/embedding_model/emb_04_spkr.png)
+![Speaker classification for 4 speakers](static/outputs/embedding_model/emb_06_spkr.png)
+![Speaker classification for 4 speakers](static/outputs/embedding_model/emb_10_spkr.png)
+
+
+**Step2** Is about training the Auto Voice Clone (AVC Model)
 
 **Step3**
 

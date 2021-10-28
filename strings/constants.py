@@ -93,7 +93,7 @@ hparam_dict = {
         # setting the hyper parameters
         "lr": 0.05,
         "training_epochs": 1000,
-        "best_model_path": "static/model_chk_pts/ge2e/embedding_model_GE2E_loss_epoch_1000_L_0.0003.pth",
+        "best_model_path": "static/model_chk_pts/ge2e/embedding_model_GE2E_m_best_900_L_0.0007.pth",
         "checkpoint_dir": "static/model_chk_pts/ge2e",
         "save_best_weights": True,
         "min_test_loss": 2.0,
