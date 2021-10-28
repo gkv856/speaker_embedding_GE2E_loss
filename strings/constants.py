@@ -169,6 +169,9 @@ hparam_dict = {
             "save_best_weights": True,
             "min_test_loss": 2.0,
             "norm_batch": True,
+            "use_dr": True,
+            "dr": 0.3,
+
         },
     },
 

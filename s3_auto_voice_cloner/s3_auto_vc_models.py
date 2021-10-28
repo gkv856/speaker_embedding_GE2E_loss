@@ -22,7 +22,7 @@ class LinearNorm(torch.nn.Module):
 
 class ConvNorm(torch.nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size=1, stride=1, padding=None,
-                 dilation=1, bias=True, w_init_gain='linear', norm_batch=True):
+                 dilation=1, bias=True, w_init_gain='linear', norm_batch=True, use_dr=True, dr=0.5):
         super(ConvNorm, self).__init__()
 
         self.norm_batch = norm_batch
@@ -41,16 +41,24 @@ class ConvNorm(torch.nn.Module):
         # normalization layer
         self.bn = nn.BatchNorm1d(out_channels)
 
+        # drop outs
+        self.dr = dr
+        self.use_dr = use_dr
+
         # initializing the conv weights as xavier uniform distribution
         gain = torch.nn.init.calculate_gain(w_init_gain)
         torch.nn.init.xavier_uniform_(self.conv.weight, gain=gain)
 
     def forward(self, signal):
-        conv_signal = self.conv(signal)
-        if self.norm_batch:
-            conv_signal = self.bn(conv_signal)
+        processed_input = self.conv(signal)
 
-        return conv_signal
+        if self.use_dr:
+            processed_input = F.dropout(processed_input, p=self.dr, training=self.training)
+
+        if self.norm_batch:
+            processed_input = self.bn(processed_input)
+
+        return processed_input
 
 
 class EncoderModel(nn.Module):
@@ -86,7 +94,10 @@ class EncoderModel(nn.Module):
                                   padding=2,
                                   dilation=1,
                                   w_init_gain='relu',
-                                  norm_batch=hp.m_avc.tpm.norm_batch)
+                                  norm_batch=hp.m_avc.tpm.norm_batch,
+                                  use_dr=hp.m_avc.tpm.use_dr,
+                                  dr=hp.m_avc.tpm.dr,
+                                  )
 
             convolutions.append(conv_layer)
 
@@ -167,7 +178,10 @@ class DecoderModel(nn.Module):
                                   padding=2,
                                   dilation=1,
                                   w_init_gain='relu',
-                                  norm_batch=hp.m_avc.tpm.norm_batch)
+                                  norm_batch=hp.m_avc.tpm.norm_batch,
+                                  use_dr=hp.m_avc.tpm.use_dr,
+                                  dr=hp.m_avc.tpm.dr,
+                                  )
 
             convolutions.append(conv_layer)
 
@@ -231,7 +245,10 @@ class Postnet(nn.Module):
                                           padding=2,
                                           dilation=1,
                                           w_init_gain='tanh',
-                                          norm_batch=hp.m_avc.tpm.norm_batch)
+                                          norm_batch=hp.m_avc.tpm.norm_batch,
+                                          use_dr=hp.m_avc.tpm.use_dr,
+                                          dr=hp.m_avc.tpm.dr,
+                                          )
                                  )
 
         # adding 4 more conv batch norm layers
@@ -243,7 +260,10 @@ class Postnet(nn.Module):
                                               padding=2,
                                               dilation=1,
                                               w_init_gain='tanh',
-                                              norm_batch=hp.m_avc.tpm.norm_batch)
+                                              norm_batch=hp.m_avc.tpm.norm_batch,
+                                              use_dr=hp.m_avc.tpm.use_dr,
+                                              dr=hp.m_avc.tpm.dr,
+                                              )
                                      )
 
         # adding the final output conv layer
@@ -254,7 +274,10 @@ class Postnet(nn.Module):
                                           padding=2,
                                           dilation=1,
                                           w_init_gain='linear',
-                                          norm_batch=hp.m_avc.tpm.norm_batch)
+                                          norm_batch=hp.m_avc.tpm.norm_batch,
+                                          use_dr=hp.m_avc.tpm.use_dr,
+                                          dr=hp.m_avc.tpm.dr,
+                                          )
                                  )
 
     def forward(self, x):

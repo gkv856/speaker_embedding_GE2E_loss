@@ -17,6 +17,8 @@ hp.m_avc.tpm.lr = 0.001
 hp.m_avc.tpm.reduce_lr_interval = 5
 hp.m_avc.tpm.data_batch_size = 2
 hp.m_avc.tpm.norm_batch = True
+hp.m_avc.tpm.use_dr = True
+hp.m_avc.tpm.dr = 0.5
 
 # resume training
 hp.m_avc.gen.load_pre_trained_model = False
