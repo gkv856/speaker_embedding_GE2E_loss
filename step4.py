@@ -29,6 +29,6 @@ hp.m_avc.gen.st_epoch_cnt = 200
 solver = TrainAutoVCNetwork(hp, absolute_path=False)
 
 # start the training
-auto_vc_model, lst_loss_tuple = solver.start_training(batched=True)
+auto_vc_model, lst_loss_tuple = solver.start_training(batched=False)
 
 print(5)

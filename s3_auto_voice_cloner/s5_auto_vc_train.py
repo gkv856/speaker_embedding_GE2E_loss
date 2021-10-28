@@ -211,7 +211,7 @@ class TrainAutoVCNetwork(object):
             self.epoch_st = self.epoch_et
 
         if e % self.hp.m_avc.tpm.reduce_lr_interval == 0:
-            self.reduce_lr()
+            self.__reduce_lr()
 
         if e % self.hp.m_avc.tpm.checkpoint_interval == 0:
             self.__save_model(e, verbose=True)
