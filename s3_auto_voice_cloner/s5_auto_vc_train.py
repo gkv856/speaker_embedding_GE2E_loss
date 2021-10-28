@@ -175,9 +175,9 @@ class TrainAutoVCNetwork(object):
             plt.ioff()
 
             fig, ax = plt.subplots(1, 2, figsize=(20, 10))
-            ax[0].set(title=f"Original Mel-Spectrogram of {s_name}")
+            ax[0].set(title=f"Original Mel-Spectrogram of {s_name}_{e}")
             librosa.display.specshow(y_curr, ax=ax[0])
-            ax[1].set(title=f"AVC's  Mel-Spectrogram of {s_name}")
+            ax[1].set(title=f"AVC's  Mel-Spectrogram of {s_name}_{e}")
             librosa.display.specshow(yp_curr, ax=ax[1])
             p = os.path.join(p_folder, f'ori_vs_pred_{s_name}_{e}.png')
             fig.savefig(p)
