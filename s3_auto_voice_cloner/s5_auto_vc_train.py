@@ -39,7 +39,6 @@ class TrainAutoVCNetwork(object):
         # Build the model and tensorboard.
         # setting the model to training mode
         self.__create_model()
-        self.auto_vc_net = self.auto_vc_net.train()
 
         # create optimizer.
         self.__create_optimizer()
@@ -50,9 +49,6 @@ class TrainAutoVCNetwork(object):
 
         # loss list
         self.train_losses = []
-
-        # curr loss
-        self.curr_loss = {}
 
         # curr loss
         self.curr_loss = {
@@ -83,11 +79,12 @@ class TrainAutoVCNetwork(object):
         :return:
         """
         # switching the model back to test mode
-        self.auto_vc_net.eval().cpu()
+        self.auto_vc_net= self.auto_vc_net.eval().cpu()
 
         # creating chk pt name
         ckpt_model_filename = f"{name}_{e}.pth"
-        ckpt_model_path = os.path.join(self.hp.general.project_root, self.hp.m_avc.tpm.checkpoint_dir,
+        ckpt_model_path = os.path.join(self.hp.general.project_root,
+                                       self.hp.m_avc.tpm.checkpoint_dir,
                                        ckpt_model_filename)
 
         # saving the file
@@ -96,7 +93,7 @@ class TrainAutoVCNetwork(object):
             print(f"Model saved as '{ckpt_model_filename}'")
 
         # switching the model back to train model
-        self.auto_vc_net.to(self.hp.general.device).train()
+        self.auto_vc_net = self.auto_vc_net.train().to(self.hp.general.device)
 
     def __create_model(self):
         """
@@ -125,6 +122,8 @@ class TrainAutoVCNetwork(object):
             print(e)
             print("Failed to load a pre-trained model, loaded a fresh model")
 
+        self.auto_vc_net = self.auto_vc_net.train().to(self.hp.general.device)
+
     def __create_optimizer(self):
         # creating an adam optimizer
         self.optimizer = torch.optim.Adam(self.auto_vc_net.parameters(),
@@ -134,14 +133,7 @@ class TrainAutoVCNetwork(object):
                                           weight_decay=0
                                           )
 
-    def reset_grad(self):
-        """
-        Reset the gradient buffers.
-        :return:
-        """
-        self.optimizer.zero_grad()
-
-    def reduce_lr(self):
+    def __reduce_lr(self):
         """
         this function reduces the learning rate use in the Adam optimizer by half until it reaches to '0.0001'
         after that, no changes in the learning rate.
@@ -183,7 +175,7 @@ class TrainAutoVCNetwork(object):
             fig.savefig(p)
             plt.close(fig)
 
-    def print_training_info(self, e):
+    def __print_training_info(self, e):
         """
         this function prints the training info to the console
         :param e: current epoch count
@@ -224,7 +216,7 @@ class TrainAutoVCNetwork(object):
         if e % self.hp.m_avc.tpm.checkpoint_interval == 0:
             self.__save_model(e, verbose=True)
 
-    def avc_forward_backprop_step(self, utter_specs, emb):
+    def __avc_forward_backprop_step(self, utter_specs, emb):
         """
         this function runs the data through the model to get the prediction (forward)
         and then uses backpropagation to update the weights
@@ -232,6 +224,10 @@ class TrainAutoVCNetwork(object):
         :param emb: speaker embedding
         :return:
         """
+
+        #############################
+        # forward pass to the model #
+        #############################
 
         utter_specs = utter_specs.to(self.hp.general.device)
         emb = emb.to(self.hp.general.device)
@@ -252,12 +248,11 @@ class TrainAutoVCNetwork(object):
         # Backward and optimize.
         loss_total = L_recon + L_recon0 + self.hp.m_avc.tpm.lambda_cd * L_content
 
-        self.reset_grad()
+        #########################
+        # backprop to the model #
+        #########################
+        self.optimizer.zero_grad()
         loss_total.backward()
-        # torch.nn.utils.clip_grad_norm_(
-        #     parameters=self.auto_vc_net.parameters(),
-        #     max_norm=10.0
-        # )
         self.optimizer.step()
 
         return loss_total.item(), L_recon0.item(), L_content.item(), utter_specs, ypred_mel_spects_final
@@ -298,7 +293,7 @@ class TrainAutoVCNetwork(object):
                     # emb = emb.clone().detach().cpu().requires_grad_(True).float()
 
                     # call model training step
-                    l_recon, l_recon0, l_content, y, yp = self.avc_forward_backprop_step(utter_specs, emb)
+                    l_recon, l_recon0, l_content, y, yp = self.__avc_forward_backprop_step(utter_specs, emb)
 
                     # collecting loss per batch
                     self.bl_l_recon.append(l_recon)
@@ -307,7 +302,7 @@ class TrainAutoVCNetwork(object):
 
                     # save the original and predicted images
                     if self.hp.m_avc.tpm.save_imgs:
-                        self.__save_ori_pred_mel_spect_as_img(e+1, y, yp, spr)
+                        self.__save_ori_pred_mel_spect_as_img(e + 1, y, yp, spr)
 
             else:
 
@@ -319,7 +314,7 @@ class TrainAutoVCNetwork(object):
                     utter_specs, emb, spr = next(data_iter)
 
                 # call model training step
-                l_recon, l_recon0, l_content, y, yp = self.avc_forward_backprop_step(utter_specs, emb)
+                l_recon, l_recon0, l_content, y, yp = self.__avc_forward_backprop_step(utter_specs, emb)
 
                 # collecting loss per batch
                 self.bl_l_recon.append(l_recon)
@@ -335,7 +330,7 @@ class TrainAutoVCNetwork(object):
             self.curr_loss['l_recon0'] = np.mean(self.bl_l_recon0)
             self.curr_loss['l_content'] = np.mean(self.bl_l_content)
 
-            self.print_training_info(e + 1)
+            self.__print_training_info(e + 1)
 
         # save final model
         self.__save_model(e + 1, name="final", verbose=True)

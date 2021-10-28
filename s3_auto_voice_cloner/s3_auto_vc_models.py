@@ -288,7 +288,7 @@ class Postnet(nn.Module):
             x = torch.tanh(self.convolutions[i](x))
 
         x = self.convolutions[-1](x)
-        x = nn.Sigmoid()(x)
+        # x = nn.Sigmoid()(x)
         return x
 
 
