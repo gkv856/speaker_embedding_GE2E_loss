@@ -1,6 +1,9 @@
 import os
 import time
 
+import librosa
+import librosa.display
+import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import torch.nn.functional as F
@@ -156,6 +159,30 @@ class TrainAutoVCNetwork(object):
         self.lr = new_reduced_lr
         self.optimizer.param_groups[0]['lr'] = self.lr
 
+    def __save_ori_pred_mel_spect_as_img(self, e, y, yp, spr):
+        # saving the training results as image
+
+        for cnt, s in enumerate(spr):
+            # creating folder
+            s_name = s.split("sv_")[-1].split(".npy")[0]
+            p_folder = os.path.join("imgs", s_name)
+            os.makedirs(p_folder, exist_ok=True)
+
+            y_curr = y[cnt, :, :].detach().cpu().numpy()
+            yp_curr = yp[cnt, :, :].detach().cpu().numpy()
+
+            # setting matplotlib's interaction to off. i.e. do not display any images while saving them
+            plt.ioff()
+
+            fig, ax = plt.subplots(1, 2, figsize=(20, 10))
+            ax[0].set(title=f"Original Mel-Spectrogram of {s_name}")
+            librosa.display.specshow(y_curr, ax=ax[0])
+            ax[1].set(title=f"AVC's  Mel-Spectrogram of {s_name}")
+            librosa.display.specshow(yp_curr, ax=ax[1])
+            p = os.path.join(p_folder, f'ori_vs_pred_{s_name}_{e}.png')
+            fig.savefig(p)
+            plt.close(fig)
+
     def print_training_info(self, e):
         """
         this function prints the training info to the console
@@ -233,7 +260,7 @@ class TrainAutoVCNetwork(object):
         # )
         self.optimizer.step()
 
-        return loss_total.item(), L_recon0.item(), L_content.item()
+        return loss_total.item(), L_recon0.item(), L_content.item(), utter_specs, ypred_mel_spects_final
 
     # ================================================================================================================#
 
@@ -271,12 +298,16 @@ class TrainAutoVCNetwork(object):
                     # emb = emb.clone().detach().cpu().requires_grad_(True).float()
 
                     # call model training step
-                    l_recon, l_recon0, l_content = self.avc_forward_backprop_step(utter_specs, emb)
+                    l_recon, l_recon0, l_content, y, yp = self.avc_forward_backprop_step(utter_specs, emb)
 
                     # collecting loss per batch
                     self.bl_l_recon.append(l_recon)
                     self.bl_l_recon0.append(l_recon0)
                     self.bl_l_content.append(l_content)
+
+                    # save the original and predicted images
+                    if self.hp.m_avc.tpm.save_imgs:
+                        self.__save_ori_pred_mel_spect_as_img(e+1, y, yp, spr)
 
             else:
 
@@ -287,18 +318,17 @@ class TrainAutoVCNetwork(object):
                     data_iter = iter(self.data_loader)
                     utter_specs, emb, spr = next(data_iter)
 
-                # for utter_specs, emb, spr in self.data_loader:
-                # if len(utter_specs):
-                # utter_specs = utter_specs.clone().detach().cpu().requires_grad_(True).float()
-                # emb = emb.clone().detach().cpu().requires_grad_(True).float()
-
                 # call model training step
-                l_recon, l_recon0, l_content = self.avc_forward_backprop_step(utter_specs, emb)
+                l_recon, l_recon0, l_content, y, yp = self.avc_forward_backprop_step(utter_specs, emb)
 
                 # collecting loss per batch
                 self.bl_l_recon.append(l_recon)
                 self.bl_l_recon0.append(l_recon0)
                 self.bl_l_content.append(l_content)
+
+                # save the original and predicted images
+                if self.hp.m_avc.tpm.save_imgs:
+                    self.__save_ori_pred_mel_spect_as_img(e + 1, y, yp, spr)
 
             # Logging.
             self.curr_loss['l_recon'] = np.mean(self.bl_l_recon)

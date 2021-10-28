@@ -171,6 +171,7 @@ hparam_dict = {
             "norm_batch": True,
             "use_dr": True,
             "dr": 0.3,
+            "save_imgs": True,
 
         },
     },
