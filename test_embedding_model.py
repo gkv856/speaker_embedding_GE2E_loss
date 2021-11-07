@@ -1,6 +1,3 @@
-"""
-Step2 of Auto Voice Cloning is to: test the embedding model
-"""
 from embedding_model_GE2E.s5_eval_model import calculate_ERR, plot_scatter
 from strings.constants import hp
 from embedding_model_GE2E.s2_model_GE2E_loss_speach_embed import  get_pre_trained_embedding_model
